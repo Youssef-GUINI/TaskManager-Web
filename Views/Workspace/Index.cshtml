@@ -1,0 +1,481 @@
+﻿@model TaskManager.Models.WorkspaceVM
+
+@{
+    ViewData["Title"] = "Workspace";
+}
+
+<style>
+    .dashboard-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    .dashboard-header {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .welcome-section {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .welcome-illustration {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(45deg, #ff6b6b, #feca57);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        color: white;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @@keyframes float {
+        0%
+
+    {
+        transform: translateY(0px);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0px);
+    }
+
+    }
+
+    .welcome-text h2 {
+        color: #2c3e50;
+        font-weight: 700;
+        margin-bottom: 5px;
+    }
+
+    .welcome-text p {
+        color: #7f8c8d;
+        margin: 0;
+        font-size: 14px;
+    }
+
+    .progress-info {
+        background: rgba(52, 152, 219, 0.1);
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 4px solid #3498db;
+    }
+
+        .progress-info h4 {
+            color: #2980b9;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .progress-info p {
+            color: #34495e;
+            margin: 5px 0 0 0;
+            font-size: 14px;
+        }
+
+    .profile-section {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .profile-img {
+        width: 45px;
+        height: 45px;
+        border-radius: 50%;
+        border: 3px solid #3498db;
+        object-fit: cover;
+    }
+
+    .profile-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .card {
+        background: rgba(255, 255, 255, 0.95);
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+
+    .card-header {
+        background: none;
+        border: none;
+        padding: 20px 20px 10px 20px;
+    }
+
+        .card-header h5 {
+            color: #2c3e50;
+            font-weight: 600;
+            margin: 0;
+        }
+
+    .card-body {
+        padding: 15px 20px 20px 20px;
+    }
+
+    .priority-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 15px;
+        border-radius: 25px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .priority-high {
+        background: rgba(231, 76, 60, 0.1);
+        color: #e74c3c;
+        border: 1px solid rgba(231, 76, 60, 0.3);
+    }
+
+    .priority-medium {
+        background: rgba(52, 152, 219, 0.1);
+        color: #3498db;
+        border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+
+    .priority-low {
+        background: rgba(39, 174, 96, 0.1);
+        color: #27ae60;
+        border: 1px solid rgba(39, 174, 96, 0.3);
+    }
+
+    .progress-bar-custom {
+        height: 8px;
+        background: #ecf0f1;
+        border-radius: 10px;
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(45deg, #27ae60, #2ecc71);
+        border-radius: 10px;
+        transition: width 0.3s ease;
+    }
+
+    .profile-link:hover {
+        background-color: rgba(52, 152, 219, 0.1);
+        border-radius: 10px;
+    }
+
+    .profile-section {
+        cursor: pointer;
+    }
+
+    /* Nouveau style pour le bouton chatbot */
+    .chat-btn {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        margin-left: 10px;
+        cursor: pointer;
+    }
+
+        .chat-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            color: white;
+            text-decoration: none;
+        }
+
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .stats-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .stats-label {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="dashboard-container">
+    <!-- Header avec design modernisé -->
+    <div class="dashboard-header">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <div class="welcome-section">
+                    <div class="welcome-illustration">
+                        👋
+                    </div>
+                    <div class="welcome-text">
+                        <h2>Welcome back, Youssef!</h2>
+                        <p>@DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="progress-info">
+                    <h4>@Model.CompletedPercent% of tasks completed</h4>
+                    <p>@(Model.CompletedPercent >= 80 ? "Excellent progress!" : Model.CompletedPercent >= 60 ? "Good progress!" : "Keep going!")</p>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="action-buttons">
+                    <a href="@Url.Action("Profile", "Workspace")" class="profile-link" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 15px; padding: 10px; border-radius: 10px; transition: background-color 0.3s ease;">
+                        <img src="/images/youssefmg.jpg" class="profile-img" alt="Youssef GUINI">
+                        <div class="profile-name">Youssef GUINI</div>
+                    </a>
+                    <!-- ✅ BOUTON CORRIGÉ : Ouvre le widget de chat -->
+                    <button onclick="openChatWidget()" class="chat-btn">
+                        <i class="fas fa-robot"></i>
+                        Assistant IA
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenu principal -->
+    <div class="row g-4">
+        <!-- Graphique d'activité -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Activity</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="activityChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tâches par priorité -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Tasks by priority</h5>
+                </div>
+                <div class="card-body">
+                    <div class="priority-badge priority-high">
+                        <span>High</span>
+                        <span class="badge bg-danger">@Model.High</span>
+                    </div>
+                    <div class="priority-badge priority-medium">
+                        <span>Medium</span>
+                        <span class="badge bg-primary">@Model.Medium</span>
+                    </div>
+                    <div class="priority-badge priority-low">
+                        <span>Low</span>
+                        <span class="badge bg-success">@Model.Low</span>
+                    </div>
+                    <div class="mt-3">
+                        <small class="text-muted">Completed: @Model.CompletedPercent%</small>
+                        <div class="progress-bar-custom">
+                            <div class="progress-fill" style="width: @Model.CompletedPercent%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deuxième rangée -->
+    <div class="row g-4 mt-1">
+        <!-- Progression -->
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Progress</h5>
+                </div>
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        <div class="stats-number">@(Model.CompletedPercent - 15)%</div>
+                        <div class="stats-label">Last week</div>
+                    </div>
+                    <div>
+                        <div class="stats-number">@Model.CompletedPercent%</div>
+                        <div class="stats-label">This week</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques rapides -->
+        <div class="col-md-5">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="stats-number">@(Model.High + Model.Medium + Model.Low)</div>
+                            <div class="stats-label">Total</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stats-number">@(((Model.High + Model.Medium + Model.Low) * Model.CompletedPercent) / 100)</div>
+                            <div class="stats-label">Completed</div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stats-number">@((Model.High + Model.Medium + Model.Low) - (((Model.High + Model.Medium + Model.Low) * Model.CompletedPercent) / 100))</div>
+                            <div class="stats-label">In Progress</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex flex-column gap-2">
+                        <a href="@Url.Action("Create", "Tasks")" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> New Task
+                        </a>
+                        <a href="@Url.Action("Index", "Tasks")" class="btn btn-outline-primary">
+                            <i class="fas fa-list"></i> View All Tasks
+                        </a>
+                        <!-- ✅ NOUVEAU : Redirige vers la page ChatBot complète -->
+                        <a href="@Url.Action("Index", "ChatBot")" class="btn btn-outline-success">
+                            <i class="fas fa-robot"></i> Ask Assistant
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Inclure le widget ChatBot -->
+@await Html.PartialAsync("_ChatWidget")
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('activityChart');
+
+        // Données dynamiques pour le graphique
+        var activityData = @Html.Raw(Json.Serialize(Model.Activity));
+
+        // Générer des labels dynamiques pour les 9 derniers jours
+        var labels = [];
+        for (let i = 8; i >= 0; i--) {
+            var date = new Date();
+            date.setDate(date.getDate() - i);
+            labels.push(date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }));
+        }
+
+        // Ajuster les données pour correspondre aux labels
+        var chartData = [];
+        if (activityData.length >= 9) {
+            chartData = activityData.slice(0, 9);
+        } else {
+            // Compléter avec des zéros si pas assez de données
+            chartData = activityData.concat(Array(9 - activityData.length).fill(0));
+        }
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tasks',
+                    data: chartData,
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    pointBackgroundColor: '#667eea',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)'
+                        },
+                        ticks: {
+                            color: '#7f8c8d'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#7f8c8d'
+                        }
+                    }
+                }
+            }
+        });
+
+        // ✅ NOUVELLE FONCTION : Ouvre le widget de chat
+        function openChatWidget() {
+            // Vérifier si le widget n'est pas déjà ouvert
+            if (!isWidgetOpen) {
+                toggleChatWidget();
+            }
+
+            // Optionnel : focus sur l'input et message de bienvenue
+            setTimeout(() => {
+                const input = document.getElementById('widgetInput');
+                if (input) {
+                    input.focus();
+                    input.placeholder = "Tapez votre question à l'assistant...";
+                }
+            }, 300);
+        }
+    </script>
+}
