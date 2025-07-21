@@ -1,6 +1,4 @@
-﻿@* Fichier complet : Views/Shared/_ChatWidget.cshtml *@
-
-<style>
+﻿<style>
     .chat-widget {
         position: fixed;
         bottom: 20px;
@@ -174,6 +172,7 @@
         font-size: 0.9rem;
         line-height: 1.4;
         word-wrap: break-word;
+        white-space: pre-wrap;
     }
 
         .widget-message-content.bot {
@@ -264,7 +263,7 @@
             animation-delay: 0.4s;
         }
 
-    @@keyframes typing {
+   @@keyframes typing {
         0%, 60%, 100%
 
     {
@@ -323,6 +322,16 @@
 
     }
 
+    .widget-error {
+        background: #fee;
+        color: #c33;
+        padding: 8px 12px;
+        border-radius: 10px;
+        margin: 10px 0;
+        font-size: 0.8rem;
+        text-align: center;
+    }
+
     @@media (max-width: 768px) {
         .chat-widget
 
@@ -347,20 +356,18 @@
 
     <div class="chat-window-widget" id="chatWindowWidget">
         <div class="widget-header">
-            <h3 class="widget-title">🤖 Assistant IA</h3>
-            <button class="widget-close" onclick="toggleChatWidget()">
-                ✕
-            </button>
+            <h3 class="widget-title">⚡ Groq AI Assistant</h3>
+            <button class="widget-close" onclick="toggleChatWidget()">✕</button>
         </div>
 
         <div class="widget-messages" id="widgetMessages">
             <div class="widget-welcome">
-                <h4>Bonjour ! 👋</h4>
-                <p>Je suis votre assistant IA TaskManager. Comment puis-je vous aider aujourd'hui ?</p>
+                <h4>Bonjour Youssef ! 👋</h4>
+                <p>Je suis votre assistant <strong>Groq AI</strong> ultra-rapide. Comment puis-je vous aider aujourd'hui ?</p>
             </div>
 
             <div class="widget-typing" id="widgetTyping">
-                <div class="widget-avatar bot">🤖</div>
+                <div class="widget-avatar bot">⚡</div>
                 <div class="widget-typing-dots">
                     <div class="widget-typing-dot"></div>
                     <div class="widget-typing-dot"></div>
@@ -370,11 +377,8 @@
         </div>
 
         <div class="widget-input">
-            <input type="text" id="widgetInput" placeholder="Tapez votre message..."
-                   onkeypress="handleWidgetEnter(event)">
-            <button class="widget-send" id="widgetSendBtn" onclick="sendWidgetMessage()">
-                ➤
-            </button>
+            <input type="text" id="widgetInput" placeholder="Tapez votre message..." onkeypress="handleWidgetEnter(event)">
+            <button class="widget-send" id="widgetSendBtn" onclick="sendWidgetMessage()">➤</button>
         </div>
     </div>
 </div>
@@ -423,7 +427,7 @@
         }
     }
 
-    // *** FONCTION MODIFIÉE - UTILISE TestMessage ***
+    // ✅ FONCTION CORRIGÉE - Utilise la bonne route
     async function sendWidgetMessage() {
         const input = document.getElementById('widgetInput');
         const sendBtn = document.getElementById('widgetSendBtn');
@@ -433,17 +437,22 @@
         const message = input.value.trim();
         if (!message || isWidgetTyping) return;
 
+        // Désactiver les contrôles
         input.disabled = true;
         sendBtn.disabled = true;
 
+        // Ajouter le message utilisateur
         addWidgetMessage('user', message);
         input.value = '';
 
+        // Montrer l'indicateur de frappe
         showWidgetTyping();
 
         try {
-            // Test avec TestMessage d'abord
-            const response = await fetch('/ChatBot/TestMessage', {
+            console.log('🚀 Envoi message widget:', message);
+
+            // ✅ ROUTE CORRIGÉE - Utilise SendMessage au lieu de TestMessage
+            const response = await fetch('/ChatBot/SendMessage', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -454,22 +463,31 @@
                 })
             });
 
+            console.log('📡 Response status:', response.status);
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('📥 Response data:', data);
 
             if (data.success) {
+                // ✅ Message de succès avec Groq
                 addWidgetMessage('bot', data.message);
+                console.log('✅ Message Groq reçu avec succès');
             } else {
-                addWidgetMessage('bot', 'Erreur: ' + (data.error || 'Erreur inconnue'));
-                console.error('Erreur du serveur:', data.error);
+                // ❌ Erreur de Groq
+                const errorMessage = data.error || 'Groq AI temporairement indisponible';
+                addWidgetMessage('bot', `❌ ${errorMessage}`);
+                console.log('❌ Erreur Groq:', errorMessage);
             }
+
         } catch (error) {
-            console.error('Erreur réseau:', error);
-            addWidgetMessage('bot', 'Erreur de connexion: ' + error.message);
+            console.error('💥 Erreur réseau:', error);
+            addWidgetMessage('bot', `💥 Erreur de connexion: ${error.message}`);
         } finally {
+            // Réactiver les contrôles
             hideWidgetTyping();
             input.disabled = false;
             sendBtn.disabled = false;
@@ -477,7 +495,7 @@
         }
     }
 
-    // Ajouter un message
+    // Ajouter un message avec support du formatage
     function addWidgetMessage(role, content) {
         const messagesContainer = document.getElementById('widgetMessages');
         const welcomeMessage = messagesContainer.querySelector('.widget-welcome');
@@ -491,11 +509,24 @@
 
         const avatar = document.createElement('div');
         avatar.className = `widget-avatar ${role}`;
-        avatar.textContent = role === 'bot' ? '🤖' : '👤';
+        avatar.textContent = role === 'bot' ? '⚡' : '👤';
 
         const contentDiv = document.createElement('div');
         contentDiv.className = `widget-message-content ${role}`;
-        contentDiv.textContent = content;
+
+        // ✅ Support pour le formatage basique
+        if (role === 'bot') {
+            // Convertir le formatage Markdown basique en HTML
+            let formattedContent = content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **gras**
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // *italique*
+                .replace(/```(.*?)```/g, '<code>$1</code>') // ```code```
+                .replace(/\n/g, '<br>'); // Retours à la ligne
+
+            contentDiv.innerHTML = formattedContent;
+        } else {
+            contentDiv.textContent = content;
+        }
 
         messageDiv.appendChild(avatar);
         messageDiv.appendChild(contentDiv);
@@ -506,7 +537,7 @@
         scrollWidgetToBottom();
     }
 
-    // Afficher/masquer l'indicateur de frappe
+    // Afficher l'indicateur de frappe
     function showWidgetTyping() {
         isWidgetTyping = true;
         const typing = document.getElementById('widgetTyping');
@@ -516,6 +547,7 @@
         }
     }
 
+    // Masquer l'indicateur de frappe
     function hideWidgetTyping() {
         isWidgetTyping = false;
         const typing = document.getElementById('widgetTyping');
@@ -546,4 +578,14 @@
             }
         }
     }
+
+    // ✅ Test de connexion au démarrage
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎯 Widget chat initialisé');
+
+        // Test de connexion optionnel
+        setTimeout(() => {
+            console.log('🔗 Widget prêt pour les messages');
+        }, 1000);
+    });
 </script>

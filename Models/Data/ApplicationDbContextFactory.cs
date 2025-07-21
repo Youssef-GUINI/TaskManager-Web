@@ -17,7 +17,11 @@ namespace TaskManager.Data
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            optionsBuilder.UseSqlServer(connectionString);
+            // ✨ CHANGEMENT : MySQL au lieu de SQL Server
+            optionsBuilder.UseMySql(
+                connectionString,
+                new MySqlServerVersion(new Version(8, 0, 33)) // Votre version MySQL
+            );
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }

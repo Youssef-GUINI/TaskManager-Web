@@ -1,62 +1,945 @@
-﻿@model List<TaskManager.Models.TaskModel>
+﻿@model IEnumerable<TaskManager.Models.TaskModel>
 @{
-    ViewData["Title"] = "Tasks";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "📋 Gestion des Tâches";
+    var stats = ViewBag.Stats;
 }
 
-<h2 class="mb-4">Liste des Tâches</h2>
+<!-- jQuery UI pour Drag & Drop -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/ui-lightness/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
 
-<a class="btn btn-primary mb-3" href="/Tasks/Create">➕ Nouvelle tâche</a>
+<!-- Font Awesome -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 
-<table class="table table-striped table-hover">
-    <thead class="table-light">
-        <tr>
-            <th>Id</th>
-            <th>Titre</th>
-            <th>Description</th>
-            <th>Échéance</th>
-            <th>Priorité</th>
-            <th>Statut</th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var t in Model)
-        {
-            <tr>
-                <td>@t.Id</td>
-                <td>@t.Title</td>
-                <td>@t.Description</td>
-                <td>@t.DueDate.ToShortDateString()</td>
-                <td>
-                    @if (t.Priority == "High")
-                    {
-                        <span class="badge bg-danger">High</span>
-                    }
-                    else if (t.Priority == "Medium")
-                    {
-                        <span class="badge bg-warning text-dark">Medium</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success">Low</span>
-                    }
-                </td>
-                <td>
-                    @if (t.Status == "To Do")
-                    {
-                        <span class="badge bg-secondary">To Do</span>
-                    }
-                    else if (t.Status == "In Progress")
-                    {
-                        <span class="badge bg-primary">In Progress</span>
-                    }
-                    else
-                    {
-                        <span class="badge bg-success">Completed</span>
-                    }
-                </td>
-            </tr>
+<style>
+    /* =================== VARIABLES ET BASE =================== */
+    .tasks-container {
+        background: #f8f9fa;
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+
+    /* =================== EN-TÊTE MODERNE =================== */
+    .tasks-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .header-title h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-title p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+
+    .header-actions .btn {
+        margin: 0 5px;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .header-actions .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    /* =================== FILTRES ET CONTRÔLES =================== */
+    .controls-section {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .controls-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .view-toggle {
+        display: flex;
+        gap: 10px;
+    }
+
+    .view-toggle .btn {
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .view-toggle .btn.active {
+        background: #667eea;
+        color: white;
+        box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+    }
+
+    .filters-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 0.9rem;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        padding: 10px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: border-color 0.3s ease;
+    }
+
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    .sort-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .sort-btn {
+        padding: 8px 15px;
+        border: 2px solid #e9ecef;
+        background: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        color: #2c3e50;
+        text-decoration: none;
+    }
+
+    .sort-btn:hover {
+        border-color: #667eea;
+        color: #667eea;
+    }
+
+    .sort-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+
+    /* =================== VUE KANBAN (DRAG & DROP) =================== */
+    .kanban-view {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 20px;
+        margin-top: 20px;
+    }
+
+    .kanban-column {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        min-height: 500px;
+    }
+
+    .kanban-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f1f3f4;
+    }
+
+    .kanban-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .kanban-count {
+        background: #667eea;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 15px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .kanban-tasks {
+        min-height: 400px;
+        padding: 10px 0;
+    }
+
+    /* =================== CARTES DE TÂCHE =================== */
+    .task-card {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+        cursor: move;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .task-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
+    }
+
+    .task-card.ui-sortable-helper {
+        transform: rotate(5deg);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        z-index: 9999;
+    }
+
+    .task-card.priority-high {
+        border-left-color: #dc3545;
+    }
+
+    .task-card.priority-medium {
+        border-left-color: #ffc107;
+    }
+
+    .task-card.priority-low {
+        border-left-color: #28a745;
+    }
+
+    .task-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .task-title {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1rem;
+        margin: 0;
+        line-height: 1.3;
+        flex: 1;
+    }
+
+    .task-priority {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        margin-left: 10px;
+    }
+
+    .task-priority.high {
+        background: #dc3545;
+        color: white;
+    }
+
+    .task-priority.medium {
+        background: #ffc107;
+        color: #2c3e50;
+    }
+
+    .task-priority.low {
+        background: #28a745;
+        color: white;
+    }
+
+    .task-description {
+        color: #6c757d;
+        font-size: 0.85rem;
+        margin-bottom: 12px;
+        line-height: 1.4;
+    }
+
+    .task-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .task-assignee {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .task-date {
+        font-weight: 500;
+    }
+
+    .task-date.overdue {
+        color: #dc3545;
+        font-weight: 700;
+    }
+
+    .task-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .task-card:hover .task-actions {
+        opacity: 1;
+    }
+
+    .task-actions .btn {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        margin-left: 4px;
+    }
+
+    /* =================== VUE TABLEAU =================== */
+    .table-view {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        overflow-x: auto;
+    }
+
+    .tasks-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .tasks-table th,
+    .tasks-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .tasks-table th {
+        background: #f8f9fa;
+        font-weight: 700;
+        color: #2c3e50;
+        position: sticky;
+        top: 0;
+    }
+
+    .tasks-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    /* =================== DROPZONE STYLES =================== */
+    .kanban-tasks.ui-droppable-hover {
+        background: rgba(102, 126, 234, 0.1);
+        border: 2px dashed #667eea;
+        border-radius: 8px;
+    }
+
+    /* =================== NOTIFICATIONS =================== */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: white;
+        font-weight: 600;
+        z-index: 9999;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        animation: slideInRight 0.3s ease;
+    }
+
+    .notification.success { 
+        background: #28a745; 
+    }
+    
+    .notification.error { 
+        background: #dc3545; 
+    }
+
+    /* =================== RESPONSIVE =================== */
+    @@media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            text-align: center;
         }
-    </tbody>
-</table>
 
+        .kanban-view {
+            grid-template-columns: 1fr;
+        }
+
+        .filters-row {
+            grid-template-columns: 1fr;
+        }
+
+        .sort-controls {
+            justify-content: center;
+        }
+    }
+
+    /* =================== ANIMATIONS =================== */
+    @@keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+</style>
+
+<div class="tasks-container">
+    <!-- En-tête moderne -->
+    <div class="tasks-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>📋 Gestion des Tâches</h1>
+                    <p>Organisation et suivi des projets</p>
+                </div>
+                <div class="header-actions">
+                    <a href="@Url.Action("Create")" class="btn btn-light">
+                        <i class="fas fa-plus me-2"></i>Nouvelle Tâche
+                    </a>
+                    <a href="@Url.Action("Index", "Timesheets")" class="btn btn-outline-light">
+                        <i class="fas fa-calendar-alt me-2"></i>Calendrier
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Messages -->
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show">
+                <i class="fas fa-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+
+        <!-- Contrôles et filtres -->
+        <div class="controls-section">
+            <div class="controls-header">
+                <h3 class="mb-0">
+                    <i class="fas fa-filter me-2"></i>Filtres et Tri
+                </h3>
+                
+                <div class="d-flex gap-3 align-items-center flex-wrap">
+                    <!-- Export buttons -->
+                    <div class="btn-group">
+                        <a href="@Url.Action("ExportPdf", new { 
+                            filterStatus = ViewBag.FilterStatus, 
+                            filterPriority = ViewBag.FilterPriority, 
+                            filterUser = ViewBag.FilterUser 
+                        })" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-file-pdf me-1"></i>PDF
+                        </a>
+                        <a href="@Url.Action("ExportExcel", new { 
+                            filterStatus = ViewBag.FilterStatus, 
+                            filterPriority = ViewBag.FilterPriority, 
+                            filterUser = ViewBag.FilterUser 
+                        })" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-file-excel me-1"></i>Excel
+                        </a>
+                    </div>
+
+                    <!-- Vue toggle -->
+                    <div class="view-toggle">
+                        <button class="btn btn-outline-primary active" id="kanbanViewBtn">
+                            <i class="fas fa-columns me-1"></i>Kanban
+                        </button>
+                        <button class="btn btn-outline-primary" id="tableViewBtn">
+                            <i class="fas fa-table me-1"></i>Tableau
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <form method="get" id="filtersForm">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>🔍 Recherche</label>
+                        <input type="text" name="search" value="@ViewBag.Search" placeholder="Titre ou description..." />
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>📋 Statut</label>
+                        <select name="filterStatus">
+                            <option value="">Tous les statuts</option>
+                            <option value="To Do" selected="@(ViewBag.FilterStatus == "To Do")">À faire</option>
+                            <option value="In Progress" selected="@(ViewBag.FilterStatus == "In Progress")">En cours</option>
+                            <option value="Completed" selected="@(ViewBag.FilterStatus == "Completed")">Terminé</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>⚡ Priorité</label>
+                        <select name="filterPriority">
+                            <option value="">Toutes les priorités</option>
+                            <option value="High" selected="@(ViewBag.FilterPriority == "High")">Haute</option>
+                            <option value="Medium" selected="@(ViewBag.FilterPriority == "Medium")">Moyenne</option>
+                            <option value="Low" selected="@(ViewBag.FilterPriority == "Low")">Faible</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>👥 Utilisateur</label>
+                        <select name="filterUser">
+                            <option value="">Tous les utilisateurs</option>
+                            @if (ViewBag.Users != null)
+                            {
+                                foreach (var user in (IEnumerable<SelectListItem>)ViewBag.Users)
+                                {
+                                    <option value="@user.Value" selected="@(ViewBag.FilterUser == user.Value)">@user.Text</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Tri -->
+                <div class="sort-controls">
+                    <span><strong>Trier par:</strong></span>
+                    
+                    <a href="@Url.Action("Index", new { 
+                        sortBy = "title", 
+                        sortOrder = ViewBag.SortBy == "title" && ViewBag.SortOrder == "asc" ? "desc" : "asc",
+                        filterStatus = ViewBag.FilterStatus,
+                        filterPriority = ViewBag.FilterPriority,
+                        filterUser = ViewBag.FilterUser,
+                        search = ViewBag.Search
+                    })" class="sort-btn @(ViewBag.SortBy == "title" ? "active" : "")">
+                        <i class="fas fa-heading me-1"></i>Titre
+                        @if (ViewBag.SortBy == "title")
+                        {
+                            <i class="fas fa-sort-@(ViewBag.SortOrder == "asc" ? "up" : "down")"></i>
+                        }
+                    </a>
+
+                    <a href="@Url.Action("Index", new { 
+                        sortBy = "duedate", 
+                        sortOrder = ViewBag.SortBy == "duedate" && ViewBag.SortOrder == "asc" ? "desc" : "asc",
+                        filterStatus = ViewBag.FilterStatus,
+                        filterPriority = ViewBag.FilterPriority,
+                        filterUser = ViewBag.FilterUser,
+                        search = ViewBag.Search
+                    })" class="sort-btn @(ViewBag.SortBy == "duedate" ? "active" : "")">
+                        <i class="fas fa-calendar me-1"></i>Échéance
+                        @if (ViewBag.SortBy == "duedate")
+                        {
+                            <i class="fas fa-sort-@(ViewBag.SortOrder == "asc" ? "up" : "down")"></i>
+                        }
+                    </a>
+
+                    <a href="@Url.Action("Index", new { 
+                        sortBy = "priority", 
+                        sortOrder = ViewBag.SortBy == "priority" && ViewBag.SortOrder == "asc" ? "desc" : "asc",
+                        filterStatus = ViewBag.FilterStatus,
+                        filterPriority = ViewBag.FilterPriority,
+                        filterUser = ViewBag.FilterUser,
+                        search = ViewBag.Search
+                    })" class="sort-btn @(ViewBag.SortBy == "priority" ? "active" : "")">
+                        <i class="fas fa-exclamation-triangle me-1"></i>Priorité
+                        @if (ViewBag.SortBy == "priority")
+                        {
+                            <i class="fas fa-sort-@(ViewBag.SortOrder == "asc" ? "up" : "down")"></i>
+                        }
+                    </a>
+
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-search me-1"></i>Filtrer
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Vue Kanban (Drag & Drop) -->
+        <div id="kanbanView" class="kanban-view">
+            <!-- Colonne À faire -->
+            <div class="kanban-column">
+                <div class="kanban-header">
+                    <div class="kanban-title">
+                        <i class="fas fa-clipboard-list" style="color: #6c757d;"></i>
+                        À faire
+                    </div>
+                    <div class="kanban-count">@Model.Count(t => t.Status == "To Do")</div>
+                </div>
+                <div class="kanban-tasks" data-status="To Do">
+                    @foreach (var task in Model.Where(t => t.Status == "To Do"))
+                    {
+                        <div class="task-card priority-@task.Priority.ToLower()" data-task-id="@task.Id">
+                            <div class="task-header">
+                                <h6 class="task-title">@task.Title</h6>
+                                <span class="task-priority @task.Priority.ToLower()">@task.Priority</span>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(task.Description))
+                            {
+                                <div class="task-description">@task.Description</div>
+                            }
+                            
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <i class="fas fa-user"></i>
+                                    @(task.AssignedToUser?.Name ?? "Non assigné")
+                                </div>
+                                <div class="task-date @(task.DueDate < DateTime.Today ? "overdue" : "")">
+                                    <i class="fas fa-calendar"></i>
+                                    @task.DueDate.ToString("dd/MM")
+                                </div>
+                            </div>
+
+                            <div class="task-actions">
+                                <a href="@Url.Action("Edit", new { id = task.Id })" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="@Url.Action("Delete", new { id = task.Id })" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Colonne En cours -->
+            <div class="kanban-column">
+                <div class="kanban-header">
+                    <div class="kanban-title">
+                        <i class="fas fa-play-circle" style="color: #ffc107;"></i>
+                        En cours
+                    </div>
+                    <div class="kanban-count">@Model.Count(t => t.Status == "In Progress")</div>
+                </div>
+                <div class="kanban-tasks" data-status="In Progress">
+                    @foreach (var task in Model.Where(t => t.Status == "In Progress"))
+                    {
+                        <div class="task-card priority-@task.Priority.ToLower()" data-task-id="@task.Id">
+                            <div class="task-header">
+                                <h6 class="task-title">@task.Title</h6>
+                                <span class="task-priority @task.Priority.ToLower()">@task.Priority</span>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(task.Description))
+                            {
+                                <div class="task-description">@task.Description</div>
+                            }
+                            
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <i class="fas fa-user"></i>
+                                    @(task.AssignedToUser?.Name ?? "Non assigné")
+                                </div>
+                                <div class="task-date @(task.DueDate < DateTime.Today ? "overdue" : "")">
+                                    <i class="fas fa-calendar"></i>
+                                    @task.DueDate.ToString("dd/MM")
+                                </div>
+                            </div>
+
+                            <div class="task-actions">
+                                <a href="@Url.Action("Edit", new { id = task.Id })" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="@Url.Action("Delete", new { id = task.Id })" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Colonne Terminé -->
+            <div class="kanban-column">
+                <div class="kanban-header">
+                    <div class="kanban-title">
+                        <i class="fas fa-check-circle" style="color: #28a745;"></i>
+                        Terminé
+                    </div>
+                    <div class="kanban-count">@Model.Count(t => t.Status == "Completed")</div>
+                </div>
+                <div class="kanban-tasks" data-status="Completed">
+                    @foreach (var task in Model.Where(t => t.Status == "Completed"))
+                    {
+                        <div class="task-card priority-@task.Priority.ToLower()" data-task-id="@task.Id">
+                            <div class="task-header">
+                                <h6 class="task-title">@task.Title</h6>
+                                <span class="task-priority @task.Priority.ToLower()">@task.Priority</span>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(task.Description))
+                            {
+                                <div class="task-description">@task.Description</div>
+                            }
+                            
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <i class="fas fa-user"></i>
+                                    @(task.AssignedToUser?.Name ?? "Non assigné")
+                                </div>
+                                <div class="task-date @(task.DueDate < DateTime.Today ? "overdue" : "")">
+                                    <i class="fas fa-calendar"></i>
+                                    @task.DueDate.ToString("dd/MM")
+                                </div>
+                            </div>
+
+                            <div class="task-actions">
+                                <a href="@Url.Action("Edit", new { id = task.Id })" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="@Url.Action("Delete", new { id = task.Id })" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Vue Tableau -->
+        <div id="tableView" class="table-view" style="display: none;">
+            <div class="table-responsive">
+                <table class="tasks-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Titre</th>
+                            <th>Priorité</th>
+                            <th>Statut</th>
+                            <th>Assigné à</th>
+                            <th>Échéance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var task in Model)
+                        {
+                            <tr>
+                                <td>@task.Id</td>
+                                <td>
+                                    <strong>@task.Title</strong>
+                                    @if (!string.IsNullOrEmpty(task.Description))
+                                    {
+                                        <br><small class="text-muted">@task.Description</small>
+                                    }
+                                </td>
+                                <td>
+                                    <span class="task-priority @task.Priority.ToLower()">@task.Priority</span>
+                                </td>
+                                <td>@task.Status</td>
+                                <td>@(task.AssignedToUser?.Name ?? "Non assigné")</td>
+                                <td class="@(task.DueDate < DateTime.Today ? "text-danger" : "")">
+                                    @task.DueDate.ToString("dd/MM/yyyy")
+                                </td>
+                                <td>
+                                    <div class="btn-group">
+                                        <a href="@Url.Action("Edit", new { id = task.Id })" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <a href="@Url.Action("Delete", new { id = task.Id })" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    console.log("🚀 Initialisation des fonctionnalités avancées...");
+
+    // =================== DRAG & DROP AVEC JQUERY UI ===================
+    initializeDragAndDrop();
+
+    // =================== TOGGLE VUE KANBAN/TABLEAU ===================
+    $('#kanbanViewBtn').click(function() {
+        $(this).addClass('active');
+        $('#tableViewBtn').removeClass('active');
+        $('#kanbanView').show();
+        $('#tableView').hide();
+    });
+
+    $('#tableViewBtn').click(function() {
+        $(this).addClass('active');
+        $('#kanbanViewBtn').removeClass('active');
+        $('#kanbanView').hide();
+        $('#tableView').show();
+    });
+
+    // =================== FILTRES AUTOMATIQUES ===================
+    $('#filtersForm select, #filtersForm input').on('change input', function() {
+        if ($(this).attr('name') === 'search') {
+            clearTimeout(window.searchTimeout);
+            window.searchTimeout = setTimeout(function() {
+                $('#filtersForm').submit();
+            }, 1000);
+        } else {
+            $('#filtersForm').submit();
+        }
+    });
+
+    // =================== FONCTIONS DRAG & DROP ===================
+    function initializeDragAndDrop() {
+        console.log("🎯 Initialisation Drag & Drop...");
+
+        $(".task-card").draggable({
+            revert: "invalid",
+            helper: "clone",
+            zIndex: 9999,
+            opacity: 0.8,
+            start: function(event, ui) {
+                $(this).addClass('ui-sortable-helper');
+                console.log("🏃 Drag started for task:", $(this).data('task-id'));
+            },
+            stop: function(event, ui) {
+                $(this).removeClass('ui-sortable-helper');
+            }
+        });
+
+        $(".kanban-tasks").droppable({
+            accept: ".task-card",
+            hoverClass: "ui-droppable-hover",
+            drop: function(event, ui) {
+                const $taskCard = ui.draggable;
+                const taskId = $taskCard.data('task-id');
+                const newStatus = $(this).data('status');
+                const $targetColumn = $(this);
+
+                console.log(`📥 Drop: Task ${taskId} → ${newStatus}`);
+
+                $taskCard.animate({
+                    opacity: 0.5
+                }, 200, function() {
+                    $taskCard.detach().appendTo($targetColumn);
+                    $taskCard.animate({ opacity: 1 }, 200);
+                    updateTaskStatus(taskId, newStatus, $taskCard);
+                });
+
+                updateColumnCounts();
+            }
+        });
+    }
+
+    function updateTaskStatus(taskId, newStatus, $taskCard) {
+        console.log(`🔄 Updating task ${taskId} to ${newStatus}...`);
+
+        $.ajax({
+            url: '@Url.Action("UpdateTaskStatus")',
+            type: 'POST',
+            data: {
+                taskId: taskId,
+                newStatus: newStatus
+            },
+            success: function(response) {
+                if (response.success) {
+                    console.log("✅ Status updated:", response.message);
+                    showNotification(response.message, 'success');
+                    $taskCard.effect("highlight", { color: "#28a745" }, 1000);
+                } else {
+                    console.error("❌ Update failed:", response.message);
+                    showNotification(response.message, 'error');
+                    revertTaskCard($taskCard, response.oldStatus || 'To Do');
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error("❌ AJAX Error:", error);
+                showNotification('Erreur de connexion', 'error');
+                revertTaskCard($taskCard, 'To Do');
+            }
+        });
+    }
+
+    function revertTaskCard($taskCard, originalStatus) {
+        console.log("↩️ Reverting task card to:", originalStatus);
+        
+        const $originalColumn = $(`.kanban-tasks[data-status="${originalStatus}"]`);
+        $taskCard.animate({ opacity: 0.5 }, 200, function() {
+            $taskCard.detach().appendTo($originalColumn);
+            $taskCard.animate({ opacity: 1 }, 200);
+            updateColumnCounts();
+        });
+    }
+
+    function updateColumnCounts() {
+        $('.kanban-column').each(function() {
+            const count = $(this).find('.task-card').length;
+            $(this).find('.kanban-count').text(count);
+        });
+    }
+
+    function showNotification(message, type) {
+        const notification = $(`
+            <div class="notification ${type}">
+                <i class="fas fa-${type === 'success' ? 'check' : 'exclamation-triangle'} me-2"></i>
+                ${message}
+            </div>
+        `);
+
+        $('body').append(notification);
+
+        setTimeout(function() {
+            notification.fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, 4000);
+    }
+
+    console.log("✅ Fonctionnalités avancées initialisées!");
+    console.log("🎯 Drag & Drop activé sur", $('.task-card').length, "tâches");
+});
+</script>

@@ -567,11 +567,19 @@
         sendMessage();
     }
 
+       // ✅ MODIFIEZ votre fonction sendMessage dans la page ChatBot/Index.cshtml
+
     async function sendMessage() {
         const messageInput = document.getElementById('messageInput');
         const message = messageInput.value.trim();
 
         if (!message || isTyping) return;
+
+        // ✅ NOUVEAU : Cacher les suggestions dès qu'on pose une question
+        const suggestionsContainer = document.getElementById('quickSuggestions');
+        if (suggestionsContainer) {
+            suggestionsContainer.style.display = 'none';
+        }
 
         // Ajouter le message utilisateur
         addMessage('user', message);
@@ -598,13 +606,45 @@
             if (data.success) {
                 addMessage('bot', data.message);
             } else {
-                addMessage('bot', 'Désolé, une erreur s\'est produite. Veuillez réessayer.');
+                addMessage('bot', data.error || 'Erreur de connexion à Grok IA.');
             }
         } catch (error) {
             console.error('Erreur:', error);
-            addMessage('bot', 'Impossible de se connecter au serveur. Vérifiez votre connexion.');
+            addMessage('bot', 'Impossible de se connecter à Grok IA. Vérifiez votre connexion.');
         } finally {
             hideTypingIndicator();
+        }
+    }
+
+    // ✅ NOUVEAU : Fonction pour cacher suggestions quand on clique sur suggestion
+    function sendSuggestion(suggestion) {
+        const messageInput = document.getElementById('messageInput');
+        messageInput.value = suggestion;
+
+        // Cacher les suggestions immédiatement
+        const suggestionsContainer = document.getElementById('quickSuggestions');
+        if (suggestionsContainer) {
+            suggestionsContainer.style.display = 'none';
+        }
+
+        sendMessage();
+    }
+
+    // ✅ NOUVEAU : Fonction pour clear chat (remontre les suggestions)
+    async function clearChat() {
+        if (confirm('Êtes-vous sûr de vouloir effacer la conversation ?')) {
+            try {
+                const response = await fetch('@Url.Action("ClearChat", "ChatBot")', {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    // Recharger la page pour remonter les suggestions
+                    location.reload();
+                }
+            } catch (error) {
+                console.error('Erreur lors de l\'effacement:', error);
+            }
         }
     }
 

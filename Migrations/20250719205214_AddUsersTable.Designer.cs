@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TaskManager.Data;
 
@@ -11,9 +12,11 @@ using TaskManager.Data;
 namespace TaskManager.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250719205214_AddUsersTable")]
+    partial class AddUsersTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -126,7 +129,7 @@ namespace TaskManager.Migrations
                             Id = 1,
                             AvatarUrl = "/images/avatars/youssef.jpg",
                             Bio = "Chef de projet expérimenté avec 5 ans d'expérience.",
-                            CreatedDate = new DateTime(2025, 7, 21, 0, 10, 8, 230, DateTimeKind.Local).AddTicks(892),
+                            CreatedDate = new DateTime(2025, 7, 19, 21, 52, 13, 61, DateTimeKind.Local).AddTicks(7244),
                             Department = "IT",
                             Email = "youssef@taskmanager.com",
                             IsActive = true,
@@ -138,7 +141,7 @@ namespace TaskManager.Migrations
                             Id = 2,
                             AvatarUrl = "/images/avatars/amina.jpg",
                             Bio = "Spécialiste React et Vue.js",
-                            CreatedDate = new DateTime(2025, 7, 21, 0, 10, 8, 230, DateTimeKind.Local).AddTicks(907),
+                            CreatedDate = new DateTime(2025, 7, 19, 21, 52, 13, 61, DateTimeKind.Local).AddTicks(7254),
                             Department = "IT",
                             Email = "amina@taskmanager.com",
                             IsActive = true,
@@ -150,7 +153,7 @@ namespace TaskManager.Migrations
                             Id = 3,
                             AvatarUrl = "/images/avatars/hassan.jpg",
                             Bio = "Expert .NET et bases de données",
-                            CreatedDate = new DateTime(2025, 7, 21, 0, 10, 8, 230, DateTimeKind.Local).AddTicks(919),
+                            CreatedDate = new DateTime(2025, 7, 19, 21, 52, 13, 61, DateTimeKind.Local).AddTicks(7263),
                             Department = "IT",
                             Email = "hassan@taskmanager.com",
                             IsActive = true,
@@ -162,7 +165,7 @@ namespace TaskManager.Migrations
                             Id = 4,
                             AvatarUrl = "/images/avatars/fatima.jpg",
                             Bio = "Créatrice d'expériences utilisateur exceptionnelles",
-                            CreatedDate = new DateTime(2025, 7, 21, 0, 10, 8, 230, DateTimeKind.Local).AddTicks(931),
+                            CreatedDate = new DateTime(2025, 7, 19, 21, 52, 13, 61, DateTimeKind.Local).AddTicks(7284),
                             Department = "Design",
                             Email = "fatima@taskmanager.com",
                             IsActive = true,
@@ -174,7 +177,7 @@ namespace TaskManager.Migrations
                             Id = 5,
                             AvatarUrl = "/images/avatars/mohamed.jpg",
                             Bio = "Garantit la qualité de tous nos produits",
-                            CreatedDate = new DateTime(2025, 7, 21, 0, 10, 8, 230, DateTimeKind.Local).AddTicks(943),
+                            CreatedDate = new DateTime(2025, 7, 19, 21, 52, 13, 61, DateTimeKind.Local).AddTicks(7292),
                             Department = "Quality",
                             Email = "mohamed@taskmanager.com",
                             IsActive = true,
