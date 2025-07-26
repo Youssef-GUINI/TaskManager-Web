@@ -1,42 +1,43 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskManager.Models
 {
-    public class User
+    public class User : IdentityUser
     {
-        public int Id { get; set; }
+        public int Idclass { get; set; }
+        [Required(ErrorMessage = "First name is required")]
+        [MaxLength(100, ErrorMessage = "First name cannot exceed 100 characters")]
+        public string FirstName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Le nom est requis")]
-        [StringLength(100, ErrorMessage = "Le nom ne peut pas dépasser 100 caractères")]
-        public string Name { get; set; } = "";
+        [Required(ErrorMessage = "Last name is required")]
+        [MaxLength(100, ErrorMessage = "Last name cannot exceed 100 characters")]
+        public string LastName { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "L'email est requis")]
-        [EmailAddress(ErrorMessage = "Format d'email invalide")]
-        [StringLength(200, ErrorMessage = "L'email ne peut pas dépasser 200 caractères")]
-        public string Email { get; set; } = "";
+        public string Name => $"{FirstName} {LastName}";
 
-        [StringLength(20, ErrorMessage = "Le téléphone ne peut pas dépasser 20 caractères")]
-        public string? Phone { get; set; }
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public override string Email { get; set; } = string.Empty;
 
-        [StringLength(100, ErrorMessage = "Le poste ne peut pas dépasser 100 caractères")]
-        public string? Position { get; set; }
+        [Required(ErrorMessage = "Recovery email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public string RecoveryEmail { get; set; } = string.Empty;
 
-        [StringLength(50, ErrorMessage = "Le département ne peut pas dépasser 50 caractères")]
-        public string? Department { get; set; }
-
-        [StringLength(500, ErrorMessage = "La bio ne peut pas dépasser 500 caractères")]
-        public string? Bio { get; set; }
-
-        [StringLength(200, ErrorMessage = "L'avatar ne peut pas dépasser 200 caractères")]
-        public string? AvatarUrl { get; set; }
-
+        public string Position { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public string Bio { get; set; } = string.Empty;
+        public string AvatarUrl { get; set; } = "/images/avatars/default.jpg";
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
         public bool IsActive { get; set; } = true;
 
-        public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public virtual ICollection<TaskModel> AssignedTasks { get; set; } = new List<TaskModel>();
+        public string? ManagerId { get; set; }  // L'ID du manager (nullable)
 
-        public DateTime? LastLoginDate { get; set; }
-
-        // Navigation property pour les tâches assignées à cet utilisateur
-        public virtual ICollection<TaskModel>? AssignedTasks { get; set; }
+    [ForeignKey("ManagerId")]
+    public virtual User? Manager { get; set; }  // Référence navigationnelle vers le manager
     }
 }
+
+

@@ -1,4 +1,4 @@
-﻿@* @model TaskManager.Models.UserProfileVM
+﻿@model TaskManager.Models.UserProfileVM
 
 @{
     ViewData["Title"] = "Profil Utilisateur";
@@ -11,605 +11,49 @@
         padding: 20px;
     }
 
-    .profile-header {
+    /* .profile-header {
         background: rgba(255, 255, 255, 0.95);
         border-radius: 20px;
         padding: 25px;
         margin-bottom: 30px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
         backdrop-filter: blur(10px);
-    }
-
-    .profile-content {
-        display: grid;
-        grid-template-columns: 2fr 1fr;
-        gap: 30px;
-    }
-
-    .profile-main {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 30px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .profile-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-    }
-
-    .stats-card, .activity-card {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 25px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
-
-    .profile-avatar {
-        width: 120px;
-        height: 120px;
-        border-radius: 50%;
-        border: 5px solid rgba(102, 126, 234, 0.2);
-        object-fit: cover;
-        position: relative;
-    }
-
-    .profile-avatar-container {
-        position: relative;
-        display: inline-block;
-    }
-
-    .online-indicator {
-        position: absolute;
-        bottom: 5px;
-        right: 5px;
-        width: 20px;
-        height: 20px;
-        background: #27ae60;
-        border-radius: 50%;
-        border: 3px solid white;
-    }
-
-    .profile-info {
-        flex: 1;
-        margin-left: 30px;
-    }
-
-    .profile-name {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #2c3e50;
-        margin-bottom: 5px;
-    }
-
-    .profile-role {
-        color: #667eea;
-        font-weight: 600;
-        font-size: 1.1rem;
-        margin-bottom: 5px;
-    }
-
-    .profile-department {
-        color: #7f8c8d;
-        margin-bottom: 20px;
-    }
-
-    .bio-section {
-        margin: 25px 0;
-    }
-
-    .bio-title {
-        font-size: 1.2rem;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 15px;
-    }
-
-    .bio-text {
-        color: #7f8c8d;
-        line-height: 1.6;
-    }
-
-    .contact-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        margin-top: 20px;
-    }
-
-    .contact-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px;
-        border-radius: 10px;
-        background: rgba(102, 126, 234, 0.05);
-    }
-
-    .contact-icon {
-        width: 20px;
-        height: 20px;
-        color: #667eea;
-    }
-
-    .stat-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-        .stat-item:last-child {
-            border-bottom: none;
-        }
-
-    .stat-label {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        color: #7f8c8d;
-    }
-
-    .stat-value {
-        font-weight: 600;
-        color: #2c3e50;
-    }
-
-    .activity-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 0;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-    }
-
-        .activity-item:last-child {
-            border-bottom: none;
-        }
-
-    .activity-indicator {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-    }
-
-        .activity-indicator.green {
-            background: #27ae60;
-        }
-
-        .activity-indicator.blue {
-            background: #3498db;
-        }
-
-        .activity-indicator.orange {
-            background: #f39c12;
-        }
-
-    .activity-content {
-        flex: 1;
-    }
-
-    .activity-description {
-        color: #2c3e50;
-        font-size: 0.9rem;
-        margin-bottom: 2px;
-    }
-
-    .activity-time {
-        color: #7f8c8d;
-        font-size: 0.8rem;
-    }
-
-    .btn-back {
-        background: none;
-        border: none;
-        color: #7f8c8d;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: color 0.3s ease;
-    }
-
-        .btn-back:hover {
-            color: #2c3e50;
-        }
-
-    .btn-edit {
-        background: #667eea;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        transition: background 0.3s ease;
-    }
-
-        .btn-edit:hover {
-            background: #5a67d8;
-        }
-
-    .btn-save {
-        background: #27ae60;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        margin-right: 10px;
-    }
-
-    .btn-cancel {
-        background: #95a5a6;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-    }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    .form-label {
-        display: block;
-        margin-bottom: 5px;
-        color: #2c3e50;
-        font-weight: 600;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 1rem;
-    }
-
-    .form-textarea {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ddd;
-        border-radius: 8px;
-        font-size: 1rem;
-        min-height: 100px;
-        resize: vertical;
-    }
-
-    @@media (max-width: 768px) {
-        .profile-content {
-            grid-template-columns: 1fr;
-        }
-
-        .profile-header-content {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .profile-info {
-            margin-left: 0;
-            margin-top: 20px;
-        }
-    }
-</style>
-
-<div class="profile-container">
-    <!-- Header -->
-    <div class="profile-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <button class="btn-back" onclick="window.location.href='@Url.Action("Index", "Workspace")'">
-                <i class="fas fa-arrow-left"></i>
-                Retour au tableau de bord
-            </button>
-            <div class="d-flex gap-2">
-                <button class="btn-edit" id="editBtn" onclick="toggleEdit()">
-                    <i class="fas fa-edit"></i>
-                    Modifier
-                </button>
-                <div id="saveButtons" style="display: none;">
-                    <button class="btn-save" onclick="saveProfile()">
-                        <i class="fas fa-save"></i>
-                        Sauvegarder
-                    </button>
-                    <button class="btn-cancel" onclick="cancelEdit()">
-                        <i class="fas fa-times"></i>
-                        Annuler
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Profile Content -->
-    <div class="profile-content">
-        <!-- Main Profile -->
-        <div class="profile-main">
-            <form id="profileForm">
-                <div class="d-flex align-items-start profile-header-content">
-                    <div class="profile-avatar-container">
-                        <img src="@Model.Avatar" alt="Profile" class="profile-avatar" id="profileAvatar">
-                        <div class="online-indicator"></div>
-                    </div>
-                    <div class="profile-info">
-                        <div id="viewMode">
-                            <h1 class="profile-name">@Model.Name</h1>
-                            <p class="profile-role">@Model.Role</p>
-                            <p class="profile-department">@Model.Department</p>
-                        </div>
-                        <div id="editMode" style="display: none;">
-                            <div class="form-group">
-                                <input type="text" class="form-input" id="editName" value="@Model.Name" placeholder="Nom complet">
-                            </div>
-                            <div class="form-group">
-                                <input type="text" class="form-input" id="editRole" value="@Model.Role" placeholder="Rôle">
-                            </div>
-                            <div class="form-group">
-                                <input type="text" class="form-input" id="editDepartment" value="@Model.Department" placeholder="Département">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bio Section -->
-                <div class="bio-section">
-                    <h3 class="bio-title">À propos</h3>
-                    <div id="bioView">
-                        <p class="bio-text">@Model.Bio</p>
-                    </div>
-                    <div id="bioEdit" style="display: none;">
-                        <textarea class="form-textarea" id="editBio" placeholder="Biographie">@Model.Bio</textarea>
-                    </div>
-                </div>
-
-                <!-- Contact Information -->
-                <div class="contact-grid">
-                    <div class="contact-item">
-                        <i class="fas fa-envelope contact-icon"></i>
-                        <div id="emailView">@Model.Email</div>
-                        <input type="email" class="form-input" id="editEmail" value="@Model.Email" style="display: none;">
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-phone contact-icon"></i>
-                        <div id="phoneView">@Model.Phone</div>
-                        <input type="tel" class="form-input" id="editPhone" value="@Model.Phone" style="display: none;">
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-map-marker-alt contact-icon"></i>
-                        <div id="locationView">@Model.Location</div>
-                        <input type="text" class="form-input" id="editLocation" value="@Model.Location" style="display: none;">
-                    </div>
-                    <div class="contact-item">
-                        <i class="fas fa-calendar contact-icon"></i>
-                        <span>Membre depuis @Model.JoinDate.ToString("MMMM yyyy")</span>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="profile-sidebar">
-            <!-- Stats Card -->
-            <div class="stats-card">
-                <h3 class="bio-title">Statistiques</h3>
-                <div class="stat-item">
-                    <div class="stat-label">
-                        <i class="fas fa-check-circle" style="color: #27ae60;"></i>
-                        Tâches terminées
-                    </div>
-                    <div class="stat-value">@Model.CompletedTasks</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">
-                        <i class="fas fa-clock" style="color: #f39c12;"></i>
-                        En cours
-                    </div>
-                    <div class="stat-value">@Model.InProgressTasks</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">
-                        <i class="fas fa-users" style="color: #3498db;"></i>
-                        Projets
-                    </div>
-                    <div class="stat-value">@Model.ProjectsCount</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">
-                        <i class="fas fa-chart-bar" style="color: #667eea;"></i>
-                        Productivité
-                    </div>
-                    <div class="stat-value">@Model.ProductivityPercentage%</div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="activity-card">
-                <h3 class="bio-title">Activité récente</h3>
-                @foreach (var activity in Model.RecentActivities)
-                {
-                    <div class="activity-item">
-                        <div class="activity-indicator @activity.TypeColor"></div>
-                        <div class="activity-content">
-                            <div class="activity-description">@activity.Description</div>
-                            <div class="activity-time">@activity.Timestamp.ToString("dd/MM/yyyy HH:mm")</div>
-                        </div>
-                    </div>
-                }
-            </div>
-        </div>
-    </div>
-</div>
-
-@section Scripts {
-    <script>
-        let isEditing = false;
-        let originalData = {};
-
-        function toggleEdit() {
-            isEditing = !isEditing;
-
-            if (isEditing) {
-                // Sauvegarder les données originales
-                originalData = {
-                    name: document.getElementById('editName').value,
-                    role: document.getElementById('editRole').value,
-                    department: document.getElementById('editDepartment').value,
-                    bio: document.getElementById('editBio').value,
-                    email: document.getElementById('editEmail').value,
-                    phone: document.getElementById('editPhone').value,
-                    location: document.getElementById('editLocation').value
-                };
-
-                showEditMode();
-            } else {
-                showViewMode();
-            }
-        }
-
-        function showEditMode() {
-            document.getElementById('viewMode').style.display = 'none';
-            document.getElementById('editMode').style.display = 'block';
-            document.getElementById('bioView').style.display = 'none';
-            document.getElementById('bioEdit').style.display = 'block';
-            document.getElementById('editBtn').style.display = 'none';
-            document.getElementById('saveButtons').style.display = 'flex';
-
-            // Afficher les inputs de contact
-            document.getElementById('emailView').style.display = 'none';
-            document.getElementById('editEmail').style.display = 'block';
-            document.getElementById('phoneView').style.display = 'none';
-            document.getElementById('editPhone').style.display = 'block';
-            document.getElementById('locationView').style.display = 'none';
-            document.getElementById('editLocation').style.display = 'block';
-        }
-
-        function showViewMode() {
-            document.getElementById('viewMode').style.display = 'block';
-            document.getElementById('editMode').style.display = 'none';
-            document.getElementById('bioView').style.display = 'block';
-            document.getElementById('bioEdit').style.display = 'none';
-            document.getElementById('editBtn').style.display = 'flex';
-            document.getElementById('saveButtons').style.display = 'none';
-
-            // Masquer les inputs de contact
-            document.getElementById('emailView').style.display = 'block';
-            document.getElementById('editEmail').style.display = 'none';
-            document.getElementById('phoneView').style.display = 'block';
-            document.getElementById('editPhone').style.display = 'none';
-            document.getElementById('locationView').style.display = 'block';
-            document.getElementById('editLocation').style.display = 'none';
-        }
-
-        function cancelEdit() {
-            // Restaurer les données originales
-            document.getElementById('editName').value = originalData.name;
-            document.getElementById('editRole').value = originalData.role;
-            document.getElementById('editDepartment').value = originalData.department;
-            document.getElementById('editBio').value = originalData.bio;
-            document.getElementById('editEmail').value = originalData.email;
-            document.getElementById('editPhone').value = originalData.phone;
-            document.getElementById('editLocation').value = originalData.location;
-
-            isEditing = false;
-            showViewMode();
-        }
-
-        function saveProfile() {
-            const formData = {
-                Name: document.getElementById('editName').value,
-                Role: document.getElementById('editRole').value,
-                Department: document.getElementById('editDepartment').value,
-                Bio: document.getElementById('editBio').value,
-                Email: document.getElementById('editEmail').value,
-                Phone: document.getElementById('editPhone').value,
-                Location: document.getElementById('editLocation').value
-            };
-
-            fetch('@Url.Action("UpdateProfileAjax", "Workspace")', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Mettre à jour la vue
-                    updateViewMode(formData);
-                    isEditing = false;
-                    showViewMode();
-
-                    // Afficher un message de succès
-                    alert('Profil mis à jour avec succès !');
-                } else {
-                    alert('Erreur lors de la mise à jour: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Erreur lors de la mise à jour du profil');
-            });
-        }
-
-        function updateViewMode(data) {
-            document.querySelector('.profile-name').textContent = data.Name;
-            document.querySelector('.profile-role').textContent = data.Role;
-            document.querySelector('.profile-department').textContent = data.Department;
-            document.querySelector('.bio-text').textContent = data.Bio;
-            document.getElementById('emailView').textContent = data.Email;
-            document.getElementById('phoneView').textContent = data.Phone;
-            document.getElementById('locationView').textContent = data.Location;
-        }
-    </script>
-} *@
-
-@model TaskManager.Models.UserProfileVM
-
-@{
-    ViewData["Title"] = "Profil Utilisateur";
+        
+    } */
+.profile-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    width: 80%; /* Ajouté */
+    max-width: 1000px; /* Ajouté */
+    margin-left: auto; /* Ajouté */
+    margin-right: auto; /* Ajouté */
 }
 
-<style>
-    .profile-container {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        min-height: 100vh;
-        padding: 20px;
-    }
-
-    .profile-header {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 20px;
-        padding: 25px;
-        margin-bottom: 30px;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
-    }
-
-    .profile-content {
+    /* .profile-content {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 30px;
-    }
-
+    } */
+/* 
     .profile-main {
         background: rgba(255, 255, 255, 0.95);
         border-radius: 20px;
         padding: 30px;
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    }
+    } */
+    .profile-main {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin: 0 auto 30px;
+    width: 80%;
+    max-width: 1000px;
+}
 
     .profile-sidebar {
         display: flex;
@@ -963,8 +407,7 @@
         </div>
     </div>
 
-    <!-- Profile Content -->
-    <div class="profile-content">
+
         <!-- Main Profile -->
         <div class="profile-main">
             <div class="d-flex align-items-start profile-header-content">
@@ -982,8 +425,8 @@
             <!-- Tabs -->
             <div class="tabs">
                 <button class="tab active" onclick="showTab('profile')">Profil</button>
-                <button class="tab" onclick="showTab('tasks')">Mes Tâches (@Model.UserTasks.Count)</button>
-                <button class="tab" onclick="showTab('stats')">Statistiques</button>
+                @* <button class="tab" onclick="showTab('tasks')">Mes Tâches (@Model.UserTasks.Count)</button>
+                <button class="tab" onclick="showTab('stats')">Statistiques</button> *@
             </div>
 
             <!-- Tab Content - Profile -->
@@ -996,9 +439,9 @@
                 <div class="contact-info">
                     <h3>Informations de contact</h3>
                     <p><strong>Email:</strong> @Model.Email</p>
+                    <p><strong>Email de Recuperation : </del>:</strong> @Model.RecoveryEmail</p>
                     <p><strong>Téléphone:</strong> @Model.Phone</p>
-                    <p><strong>Localisation:</strong> @Model.Location</p>
-                    <p><strong>Membre depuis:</strong> @Model.JoinDate.ToString("MMMM yyyy")</p>
+                    <p><strong>Dernière Connexion : </strong> @Model.JoinDate.ToString("MMMM yyyy")</p>
                 </div>
             </div>
 
@@ -1088,32 +531,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Sidebar -->
-        <div class="profile-sidebar">
-            <!-- Recent Activity -->
-            <div class="activity-card">
-                <h3>Activité récente</h3>
-                @if (Model.RecentActivities != null && Model.RecentActivities.Any())
-                {
-                    @foreach (var activity in Model.RecentActivities)
-                    {
-                        <div class="activity-item">
-                            <div class="activity-indicator @activity.TypeColor"></div>
-                            <div class="activity-content">
-                                <div class="activity-description">@activity.Description</div>
-                                <div class="activity-time">@activity.Timestamp.ToString("dd/MM/yyyy HH:mm")</div>
-                            </div>
-                        </div>
-                    }
-                }
-                else
-                {
-                    <p class="text-muted">Aucune activité récente</p>
-                }
-            </div>
-        </div>
-    </div>
 </div>
 
 <script>

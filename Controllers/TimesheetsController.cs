@@ -1,12 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaskManager.Data;
+using TaskManager.data;
 using TaskManager.Models;
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace TaskManager.Controllers
 {
+    
     public class TimesheetsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -25,62 +26,144 @@ namespace TaskManager.Controllers
         }
 
         // =================== PAGE PRINCIPALE CALENDRIER ===================
+        // public async Task<IActionResult> Index()
+        // {
+        //     // Récupérer toutes les tâches avec leurs utilisateurs assignés
+        //     var tasks = await _context.Tasks
+        //         .Include(t => t.AssignedToUser)
+        //         .Include(t => t.CreatedByUser)
+        //         .OrderBy(t => t.DueDate)
+        //         .ToListAsync();
+
+        //     // Récupérer tous les utilisateurs pour les filtres
+        //     var users = await _context.Users
+        //         .Where(u => u.IsActive)
+        //         .OrderBy(u => u.LastName)
+        //         .ToListAsync();
+
+        //     // Statistiques rapides
+        //     var today = DateTime.Today;
+        //     var stats = new
+        //     {
+        //         TotalTasks = tasks.Count,
+        //         DueToday = tasks.Count(t => t.DueDate.Date == today),
+        //         Overdue = tasks.Count(t => t.DueDate.Date < today && t.Status != "Completed"),
+        //         ThisWeek = tasks.Count(t => t.DueDate.Date >= today && t.DueDate.Date <= today.AddDays(7)),
+        //         Completed = tasks.Count(t => t.Status == "Completed"),
+        //         InProgress = tasks.Count(t => t.Status == "In Progress"),
+        //         ToDo = tasks.Count(t => t.Status == "To Do")
+        //     };
+
+        //     // Convertir les tâches en format FullCalendar
+        //     var calendarEvents = tasks.Select(t => new
+        //     {
+        //         id = t.Id,
+        //         title = t.Title,
+        //         start = t.DueDate.ToString("yyyy-MM-dd"),
+        //         end = t.DueDate.ToString("yyyy-MM-dd"),
+        //         description = t.Description,
+        //         priority = t.Priority,
+        //         status = t.Status,
+        //         assignedTo = t.AssignedToUser?.Name ?? "Non assigné",
+        //         assignedToId = t.AssignedToUserId,
+        //         createdBy = t.CreatedByUser?.Name ?? "Inconnu",
+        //         createdDate = t.CreatedDate.ToString("yyyy-MM-dd"),
+        //         backgroundColor = GetTaskColor(t.Priority, t.Status),
+        //         borderColor = GetTaskBorderColor(t.Status),
+        //         textColor = GetTaskTextColor(t.Priority)
+        //     }).ToList();
+
+        //     // Passer les données à la vue
+        //     ViewBag.CalendarEventsJson = JsonSerializer.Serialize(calendarEvents, JsonOptions);
+
+        //     ViewBag.Users = users;
+        //     ViewBag.Stats = stats;
+        //     ViewBag.TasksCount = tasks.Count;
+
+        //     return View(tasks);
+        // }
         public async Task<IActionResult> Index()
-        {
-            // Récupérer toutes les tâches avec leurs utilisateurs assignés
-            var tasks = await _context.Tasks
-                .Include(t => t.AssignedToUser)
-                .Include(t => t.CreatedByUser)
-                .OrderBy(t => t.DueDate)
-                .ToListAsync();
+{
+    // Récupérer l'utilisateur connecté
+    var currentUserEmail = User.Identity?.Name;
+    var currentUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == currentUserEmail);
 
-            // Récupérer tous les utilisateurs pour les filtres
-            var users = await _context.Users
-                .Where(u => u.IsActive)
-                .OrderBy(u => u.Name)
-                .ToListAsync();
+    if (currentUser == null)
+    {
+        return RedirectToAction("Login", "Account");
+    }
 
-            // Statistiques rapides
-            var today = DateTime.Today;
-            var stats = new
-            {
-                TotalTasks = tasks.Count,
-                DueToday = tasks.Count(t => t.DueDate.Date == today),
-                Overdue = tasks.Count(t => t.DueDate.Date < today && t.Status != "Completed"),
-                ThisWeek = tasks.Count(t => t.DueDate.Date >= today && t.DueDate.Date <= today.AddDays(7)),
-                Completed = tasks.Count(t => t.Status == "Completed"),
-                InProgress = tasks.Count(t => t.Status == "In Progress"),
-                ToDo = tasks.Count(t => t.Status == "To Do")
-            };
+    IQueryable<TaskModel> tasksQuery = _context.Tasks
+        .Include(t => t.AssignedToUser)
+        .Include(t => t.CreatedByUser);
 
-            // Convertir les tâches en format FullCalendar
-            var calendarEvents = tasks.Select(t => new
-            {
-                id = t.Id,
-                title = t.Title,
-                start = t.DueDate.ToString("yyyy-MM-dd"),
-                end = t.DueDate.ToString("yyyy-MM-dd"),
-                description = t.Description,
-                priority = t.Priority,
-                status = t.Status,
-                assignedTo = t.AssignedToUser?.Name ?? "Non assigné",
-                assignedToId = t.AssignedToUserId,
-                createdBy = t.CreatedByUser?.Name ?? "Inconnu",
-                createdDate = t.CreatedDate.ToString("yyyy-MM-dd"),
-                backgroundColor = GetTaskColor(t.Priority, t.Status),
-                borderColor = GetTaskBorderColor(t.Status),
-                textColor = GetTaskTextColor(t.Priority)
-            }).ToList();
+    // Filtrer selon le rôle
+    if (User.IsInRole("Admin"))
+    {
+        var teamMemberIds = await _context.Users
+            .Where(u => u.ManagerId == currentUser.Id)
+            .Select(u => u.Id)
+            .ToListAsync();
 
-            // Passer les données à la vue
-            ViewBag.CalendarEventsJson = JsonSerializer.Serialize(calendarEvents, JsonOptions);
+        tasksQuery = tasksQuery.Where(t => teamMemberIds.Contains(t.AssignedToUserId));
+    }
+    else if (!User.IsInRole("SuperAdmin")) // Pour les membres normaux
+    {
+        tasksQuery = tasksQuery.Where(t => t.AssignedToUserId == currentUser.Id);
+    }
 
-            ViewBag.Users = users;
-            ViewBag.Stats = stats;
-            ViewBag.TasksCount = tasks.Count;
+    var tasks = await tasksQuery
+        .OrderBy(t => t.DueDate)
+        .ToListAsync();
 
-            return View(tasks);
-        }
+    // Préparer les données pour FullCalendar
+    var calendarEvents = tasks.Select(t => new
+    {
+        id = t.Id,
+        title = t.Title,
+        start = t.DueDate.ToString("yyyy-MM-dd"),
+        end = t.DueDate.ToString("yyyy-MM-dd"),
+        description = t.Description,
+        priority = t.Priority,
+        status = t.Status,
+        assignedTo = t.AssignedToUser?.Name ?? "Non assigné",
+        assignedToId = t.AssignedToUserId,
+        createdBy = t.CreatedByUser?.Name ?? "Inconnu",
+        createdDate = t.CreatedDate.ToString("yyyy-MM-dd"),
+        backgroundColor = GetTaskColor(t.Priority, t.Status),
+        borderColor = GetTaskBorderColor(t.Status),
+        textColor = GetTaskTextColor(t.Priority)
+    }).ToList();
+
+    // Récupérer les utilisateurs pour les filtres
+    var users = await _context.Users
+        .Where(u => u.IsActive && 
+               (User.IsInRole("SuperAdmin") || 
+                User.IsInRole("Admin") && u.ManagerId == currentUser.Id || 
+                !User.IsInRole("Admin") && u.Id == currentUser.Id))
+        .OrderBy(u => u.LastName)
+        .ToListAsync();
+
+    // Statistiques
+    var today = DateTime.Today;
+    var stats = new
+    {
+        TotalTasks = tasks.Count,
+        DueToday = tasks.Count(t => t.DueDate.Date == today),
+        Overdue = tasks.Count(t => t.DueDate.Date < today && t.Status != "Completed"),
+        ThisWeek = tasks.Count(t => t.DueDate.Date >= today && t.DueDate.Date <= today.AddDays(7)),
+        Completed = tasks.Count(t => t.Status == "Completed"),
+        InProgress = tasks.Count(t => t.Status == "In Progress"),
+        ToDo = tasks.Count(t => t.Status == "To Do")
+    };
+
+    ViewBag.CalendarEventsJson = JsonSerializer.Serialize(calendarEvents, JsonOptions);
+    ViewBag.Users = users;
+    ViewBag.Stats = stats;
+    ViewBag.TasksCount = tasks.Count;
+
+    return View(tasks);
+}
 
         // =================== API POUR RÉCUPÉRER LES TÂCHES EN JSON ===================
         [HttpGet]
@@ -100,7 +183,7 @@ namespace TaskManager.Controllers
 
             // Filtrer par utilisateur si spécifié
             if (userId.HasValue)
-                query = query.Where(t => t.AssignedToUserId == userId.Value);
+                query = query.Where(t => t.AssignedToUserId == userId.Value.ToString());
 
             var tasks = await query.ToListAsync();
 
@@ -163,7 +246,7 @@ namespace TaskManager.Controllers
             return Json(taskDetails);
         }
 
-        // =================== MISE À JOUR RAPIDE DU STATUT ===================
+        //=================== MISE À JOUR RAPIDE DU STATUT ===================
         [HttpPost]
         public async Task<IActionResult> UpdateTaskStatus(int id, string status)
         {
@@ -173,49 +256,62 @@ namespace TaskManager.Controllers
 
             var oldStatus = task.Status;
             task.Status = status;
+    await _context.SaveChangesAsync();
 
-            try
-            {
-                await _context.SaveChangesAsync();
-                return Json(new
-                {
-                    success = true,
-                    message = $"Statut changé de '{oldStatus}' à '{status}'",
-                    newColor = GetTaskColor(task.Priority, task.Status)
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Erreur: {ex.Message}" });
-            }
+    // ➡ Renvoyez les Nouvelles données pour mise à jour
+    return Json(new
+    {
+        success = true,
+        taskId = task.Id,
+        newStatus = status,
+        newColor = GetTaskColor(task.Priority, status),
+        // ➡ Ajoutez les stats mises à jour si nécessaire
+        stats = new {
+            overdue = await _context.Tasks.CountAsync(t => t.DueDate < DateTime.Today && t.Status != "Completed"),
+            dueToday = await _context.Tasks.CountAsync(t => t.DueDate.Date == DateTime.Today)
+        }
+    });
         }
 
         // =================== MISE À JOUR DE LA DATE D'ÉCHÉANCE ===================
         [HttpPost]
-        public async Task<IActionResult> UpdateTaskDate(int id, DateTime newDate)
-        {
-            var task = await _context.Tasks.FindAsync(id);
-            if (task == null)
-                return Json(new { success = false, message = "Tâche non trouvée" });
+public async Task<IActionResult> UpdateTaskDate([FromBody] UpdateTaskRequest request)
+{
+    // Debug: Affiche les données reçues
+    Console.WriteLine($"Reçu - ID: {request?.Id}, Date: {request?.NewDate}");
+    
+    if (request == null || request.Id <= 0)
+        return Json(new { success = false, message = "Données invalides" });
 
-            var oldDate = task.DueDate;
-            task.DueDate = newDate;
+    var task = await _context.Tasks.FindAsync(request.Id);
+    
+    if (task == null)
+    {
+        // Debug: Affiche toutes les tâches existantes
+        var existingTasks = await _context.Tasks.ToListAsync();
+        Console.WriteLine($"Tâches existantes: {JsonSerializer.Serialize(existingTasks)}");
+        
+        return Json(new { success = false, message = $"Tâche ID {request.Id} non trouvée" });
+    }
 
-            try
-            {
-                await _context.SaveChangesAsync();
-                return Json(new
-                {
-                    success = true,
-                    message = $"Date changée du {oldDate:dd/MM/yyyy} au {newDate:dd/MM/yyyy}"
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Erreur: {ex.Message}" });
-            }
-        }
+    try
+    {
+        task.DueDate = request.NewDate;
+        await _context.SaveChangesAsync();
+        return Json(new { success = true });
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erreur: {ex.Message}");
+        return Json(new { success = false, message = ex.Message });
+    }
+}
 
+public class UpdateTaskRequest
+{
+    public int Id { get; set; }
+    public DateTime NewDate { get; set; }
+}
         // =================== FONCTIONS UTILITAIRES POUR LES COULEURS (STATIC) ===================
         private static string GetTaskColor(string priority, string status)
         {

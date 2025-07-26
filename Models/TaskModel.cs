@@ -24,13 +24,15 @@ namespace TaskManager.Models
         public string Status { get; set; } = "To Do";
 
         public DateTime CreatedDate { get; set; } = DateTime.Now;
+        public DateTime? LastUpdated { get; set; }
+        public DateTime? CompletedDate { get; set; }
 
         // ✨ NOUVEAUX CHAMPS POUR LIAISON UTILISATEUR
         [Display(Name = "Assigné à")]
-        public int? AssignedToUserId { get; set; }
+        public string? AssignedToUserId { get; set; }
 
         [Display(Name = "Créé par")]
-        public int? CreatedByUserId { get; set; }
+        public string? CreatedByUserId { get; set; }
 
         // Navigation properties
         [ForeignKey("AssignedToUserId")]

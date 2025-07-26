@@ -144,18 +144,14 @@
         }
 
     @@keyframes pulse {
-        0%, 100%
-
-    {
-        opacity: 1;
-        transform: scale(1);
-    }
-
-    50% {
-        opacity: 0.7;
-        transform: scale(1.1);
-    }
-
+        0%, 100% {
+            opacity: 1;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.7;
+            transform: scale(1.1);
+        }
     }
 
     /* =================== ZONE DE CHAT =================== */
@@ -394,83 +390,74 @@
             }
 
     @@keyframes typingDots {
-        0%, 60%, 100%
-
-    {
-        transform: translateY(0);
-    }
-
-    30% {
-        transform: translateY(-10px);
-    }
-
+        0%, 60%, 100% {
+            transform: translateY(0);
+        }
+        30% {
+            transform: translateY(-10px);
+        }
     }
 
     @@keyframes fadeInUp {
-        from
-
-    {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* =================== RESPONSIVE =================== */
     @@media (max-width: 768px) {
-        .team-chat-container
+        .team-chat-container {
+            flex-direction: column;
+            height: auto;
+            min-height: calc(100vh - 40px);
+        }
 
-    {
-        flex-direction: column;
-        height: auto;
-        min-height: calc(100vh - 40px);
-    }
+        .team-sidebar {
+            width: 100%;
+            height: 300px;
+        }
 
-    .team-sidebar {
-        width: 100%;
-        height: 300px;
-    }
+        .team-members {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            gap: 10px;
+            padding: 10px 20px;
+        }
 
-    .team-members {
-        display: flex;
-        overflow-x: auto;
-        overflow-y: hidden;
-        gap: 10px;
-        padding: 10px 20px;
-    }
+        .member-item {
+            flex: 0 0 auto;
+            flex-direction: column;
+            width: 80px;
+            text-align: center;
+            padding: 10px;
+        }
 
-    .member-item {
-        flex: 0 0 auto;
-        flex-direction: column;
-        width: 80px;
-        text-align: center;
-        padding: 10px;
-    }
+        .member-avatar {
+            margin-right: 0;
+            margin-bottom: 8px;
+        }
 
-    .member-avatar {
-        margin-right: 0;
-        margin-bottom: 8px;
-    }
+        .member-info {
+            flex: none;
+        }
 
-    .member-info {
-        flex: none;
-    }
+        .member-name {
+            font-size: 0.8rem;
+        }
 
-    .member-name {
-        font-size: 0.8rem;
-    }
-
-    .member-status {
-        font-size: 0.7rem;
-    }
-
+        .member-status {
+            font-size: 0.7rem;
+        }
     }
 </style>
+<p>Test direct : @(ViewBag.UsersCount ?? 999)</p>
+
 
 <!-- Status de connexion -->
 <div id="connectionStatus" class="connection-status" style="display: none;">
@@ -481,8 +468,8 @@
     <!-- Sidebar avec la liste des utilisateurs -->
     <div class="team-sidebar">
         <div class="team-header">
-            <h3>💬 Team Chat</h3>
-            <p>🏢 TaskManager Workspace</p>
+            <h3>💬 Messagerie d'équipe</h3>
+            <p>🏢 Espace de travail du gestionnaire de tâches</p>
             <small style="opacity: 0.8;">👥 @(ViewBag.UsersCount ?? 0) utilisateurs trouvés</small>
         </div>
 
@@ -528,310 +515,244 @@
     </div>
 </div>
 
-<!-- SignalR Script -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
-
 <script>
-    // =================== DONNÉES RÉELLES DE LA BASE DE DONNÉES ===================
-
-    // ✨ RÉCUPÉRATION SÉCURISÉE DES UTILISATEURS
-    let teamMembersFromServer = [];
-
-    try {
-        const jsonData = '@Html.Raw(ViewBag.TeamMembersJson)';
-        console.log("🔍 JSON brut reçu:", jsonData);
-
-        if (jsonData && jsonData !== '' && jsonData !== 'null') {
-            teamMembersFromServer = JSON.parse(jsonData);
-            console.log("✅ JSON parsé avec succès:", teamMembersFromServer);
-        } else {
-            console.warn("⚠️ Pas de données JSON valides");
-            teamMembersFromServer = [];
-        }
-    } catch (error) {
-        console.error("❌ Erreur de parsing JSON:", error);
-        console.log("🔍 Données problématiques:", '@Html.Raw(ViewBag.TeamMembersJson)');
-        teamMembersFromServer = [];
-    }
-
-    console.log("👥 Utilisateurs finaux:", teamMembersFromServer);
-    console.log("🔍 Type des données:", typeof teamMembersFromServer);
-    console.log("🔍 Nombre d'utilisateurs:", teamMembersFromServer ? teamMembersFromServer.length : 'null/undefined');
-    console.log("🎯 Nombre d'utilisateurs depuis serveur:", @(ViewBag.UsersCount ?? 0));
-
-    // Debug des données ViewBag
-    console.log("🎯 ViewBag CurrentUser:", "@ViewBag.CurrentUser");
-    console.log("🎯 ViewBag CurrentUserId:", "@ViewBag.CurrentUserId");
-
+    // =================== INITIALISATION ET DEBUG ===================
+    console.log("=== INITIALISATION DU CHAT D'ÉQUIPE ===");
+    
     // Variables globales
-    const currentUserName = "@ViewBag.CurrentUser";
-    const currentUserId = "@ViewBag.CurrentUserId";
+    const currentUserName = "@ViewBag.CurrentUser" || "Utilisateur";
+    const currentUserId = "@ViewBag.CurrentUserId" || "0";
     let selectedUser = null;
     let connectedUsers = [];
-    let typingTimer = null;
     let conversationHistory = {};
+    let teamMembersFromServer = [];
 
     // =================== CONFIGURATION SIGNALR ===================
-
     const connection = new signalR.HubConnectionBuilder()
         .withUrl("/chathub")
         .withAutomaticReconnect([0, 2000, 10000, 30000])
         .configureLogging(signalR.LogLevel.Information)
         .build();
 
-    // ✨ FONCTION POUR CRÉER DES UTILISATEURS DE TEST (DÉFINIE EN PREMIER)
-    function createTestUsers() {
-        console.log("🔄 Création d'utilisateurs de test...");
+    // =================== CHARGEMENT DES DONNÉES ===================
+    function loadInitialData() {
+        try {
+            // 1. Récupération des données depuis ViewBag
+            const rawJson = '@Html.Raw(ViewBag.TeamMembersJson)' || '[]';
+            console.log("[DATA] JSON brut:", rawJson);
 
-        const testUsers = [
-            {
-                id: "test-1",
-                name: "Youssef El Mansouri",
-                avatar: "https://ui-avatars.com/api/?name=Youssef+El+Mansouri&size=100&background=667eea&color=fff",
-                status: "offline",
-                position: "Chef de Projet",
-                department: "IT"
-            },
-            {
-                id: "test-2",
-                name: "Amina Benali",
-                avatar: "https://ui-avatars.com/api/?name=Amina+Benali&size=100&background=e74c3c&color=fff",
-                status: "offline",
-                position: "Développeuse Frontend",
-                department: "IT"
-            },
-            {
-                id: "test-3",
-                name: "Hassan Idrissi",
-                avatar: "https://ui-avatars.com/api/?name=Hassan+Idrissi&size=100&background=27ae60&color=fff",
-                status: "offline",
-                position: "Développeur Backend",
-                department: "IT"
+            // 2. Nettoyage des données JSON
+            const cleanJson = rawJson
+                .replace(/&quot;/g, '"')
+                .replace(/&amp;/g, '&')
+                .replace(/\\/g, '');
+
+            // 3. Parsing des données
+            teamMembersFromServer = JSON.parse(cleanJson);
+            console.log("[DATA] Données parsées:", teamMembersFromServer);
+
+            // 4. Validation des données
+            if (!Array.isArray(teamMembersFromServer)) {
+                throw new Error("Les données ne sont pas un tableau valide");
             }
-        ];
 
-        // Remplacer les données vides par les données de test
-        teamMembersFromServer = testUsers;
+            // 5. Chargement initial
+            loadTeamMembers();
+            initializeSignalR();
 
-        const container = document.getElementById('teamMembers');
-        container.innerHTML = '<div style="padding: 10px; background: #fff3cd; color: #856404; margin: 10px; border-radius: 5px; font-size: 0.9rem;">⚠️ Utilisateurs de test (problème de base de données)</div>';
-
-        testUsers.forEach(member => {
-            const memberElement = document.createElement('div');
-            memberElement.className = 'member-item';
-            memberElement.dataset.userId = member.id;
-
-            memberElement.innerHTML = `
-                <img src="${member.avatar}" alt="${member.name}" class="member-avatar">
-                <div class="member-info">
-                    <div class="member-name">${member.name}</div>
-                    <div class="member-status">
-                        <span class="status-dot ${member.status}" id="status-${member.id}"></span>
-                        <span id="status-text-${member.id}">${member.position}</span>
-                    </div>
-                </div>
-            `;
-
-            memberElement.addEventListener('click', () => selectUser(member));
-            container.appendChild(memberElement);
-        });
-
-        console.log("✅ Utilisateurs de test créés");
+        } catch (error) {
+            console.error("[ERREUR] Chargement initial:", error);
+            showErrorNotification("Erreur de chargement des données");
+            teamMembersFromServer = [];
+        }
     }
 
-    // =================== FONCTIONS PRINCIPALES ===================
-
+    // =================== GESTION DES MEMBRES ===================
     function loadTeamMembers() {
         const container = document.getElementById('teamMembers');
+        if (!container) {
+            console.error("[ERREUR] Container 'teamMembers' introuvable");
+            return;
+        }
+
         container.innerHTML = '';
 
-        console.log("🔄 Chargement des membres réels...");
-        console.log("🔍 teamMembersFromServer:", teamMembersFromServer);
-
-        // ✨ VÉRIFICATION ET GESTION D'ERREUR
-        if (!teamMembersFromServer || !Array.isArray(teamMembersFromServer) || teamMembersFromServer.length === 0) {
-            console.error("❌ Pas d'utilisateurs trouvés!");
-            console.log("🔍 Valeur de teamMembersFromServer:", teamMembersFromServer);
-
-            // Afficher un message d'erreur dans la sidebar
+        if (!teamMembersFromServer || teamMembersFromServer.length === 0) {
             container.innerHTML = `
-                <div style="padding: 20px; text-align: center; color: #e74c3c;">
-                    <p><strong>❌ Aucun utilisateur trouvé</strong></p>
-                    <p style="font-size: 0.9rem;">Vérifiez la base de données</p>
+                <div class="alert alert-warning">
+                    Aucun membre d'équipe trouvé dans la base de données
                 </div>
             `;
             return;
         }
 
-        // ✨ UTILISER LES VRAIS UTILISATEURS DE LA BASE DE DONNÉES
-        teamMembersFromServer.forEach((member, index) => {
-            console.log(`👤 Chargement membre ${index + 1}:`, member);
+        teamMembersFromServer.forEach(member => {
+            if (!member.idclass) {
+                console.warn("[WARN] Membre sans ID:", member);
+                return;
+            }
 
-            const memberElement = document.createElement('div');
-            memberElement.className = 'member-item';
-            memberElement.dataset.userId = member.id;
-
-            memberElement.innerHTML = `
-                <img src="${member.avatar}" alt="${member.name}" class="member-avatar"
-                     onerror="this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&size=100&background=667eea&color=fff'">
-                <div class="member-info">
-                    <div class="member-name">${member.name}</div>
-                    <div class="member-status">
-                        <span class="status-dot ${member.status}" id="status-${member.id}"></span>
-                        <span id="status-text-${member.id}">${member.position || 'Membre de l\'équipe'}</span>
-                    </div>
-                </div>
-            `;
-
-            memberElement.addEventListener('click', () => selectUser(member));
+            const memberElement = createMemberElement(member);
             container.appendChild(memberElement);
         });
 
-        console.log(`✅ ${teamMembersFromServer.length} membres chargés depuis la base de données`);
+        console.log(`[SUCCÈS] ${teamMembersFromServer.length} membres chargés`);
     }
 
-    function selectUser(member) {
-        selectedUser = member;
-        console.log("👤 Utilisateur sélectionné:", member);
+    function createMemberElement(member) {
+        const memberElement = document.createElement('div');
+        memberElement.className = 'member-item';
+        memberElement.dataset.userId = member.idclass;
+        memberElement.dataset.userName = member.LastName || '';
 
-        // Mettre à jour l'état actif
+        const memberName = member.LastName || 'Utilisateur';
+        const position = member.position || 'Membre';
+        const avatarUrl = member.avatar || 
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(memberName.substring(0,1))}&size=100&background=667eea&color=fff`;
+
+        memberElement.innerHTML = `
+            <img src="${avatarUrl}" alt="${memberName}" class="member-avatar"
+                 onerror="this.src='https://ui-avatars.com/api/?name=U&size=100&background=667eea&color=fff'">
+            <div class="member-info">
+                <div class="member-name">${memberName}</div>
+                <div class="member-status">
+                    <span class="status-dot ${member.status || 'offline'}" id="status-${member.idclass}"></span>
+                    <span id="status-text-${member.idclass}">${position}</span>
+                </div>
+            </div>
+        `;
+
+        memberElement.addEventListener('click', () => selectUser(member));
+        return memberElement;
+    }
+
+    // =================== GESTION DU CHAT ===================
+    function selectUser(member) {
+        if (!member) return;
+
+        selectedUser = member;
+        console.log("[CHAT] Utilisateur sélectionné:", member);
+
+        // Mise à jour de l'interface
         document.querySelectorAll('.member-item').forEach(item => {
             item.classList.remove('active');
         });
-        document.querySelector(`[data-user-id="${member.id}"]`).classList.add('active');
+        
+        const selectedElement = document.querySelector(`[data-user-id="${member.idclass}"]`);
+        if (selectedElement) selectedElement.classList.add('active');
 
-        // Mettre à jour l'en-tête du chat
         updateChatHeader(member);
-
-        // Charger l'historique de conversation
-        loadConversationHistory(member.name);
-
-        // Afficher la zone de saisie
+        loadConversationHistory(member.LastName || member.idclass);
         showChatInputArea();
     }
 
     function updateChatHeader(user) {
         const chatHeader = document.getElementById('chatHeader');
+        if (!chatHeader) return;
+
         const chatUserAvatar = document.getElementById('chatUserAvatar');
         const chatUserName = document.getElementById('chatUserName');
         const chatStatusDot = document.getElementById('chatStatusDot');
         const chatStatusText = document.getElementById('chatStatusText');
 
-        chatHeader.style.display = 'flex';
-        chatUserAvatar.src = user.avatar;
-        chatUserAvatar.alt = user.name;
-        chatUserName.textContent = user.name;
+        if (!chatUserAvatar || !chatUserName || !chatStatusDot || !chatStatusText) return;
 
-        const isOnline = connectedUsers.some(u => u.userName === user.name);
+        chatHeader.style.display = 'flex';
+        
+        const userName = user.LastName || 'Utilisateur';
+        const avatarUrl = user.avatar || 
+            `https://ui-avatars.com/api/?name=${encodeURIComponent(userName.substring(0,1))}&size=100&background=667eea&color=fff`;
+
+        chatUserAvatar.src = avatarUrl;
+        chatUserAvatar.alt = userName;
+        chatUserName.textContent = userName;
+
+        const isOnline = connectedUsers.some(u => u.userName === userName);
         chatStatusDot.className = `status-dot ${isOnline ? 'online' : 'offline'}`;
         chatStatusText.textContent = isOnline ? '🟢 En ligne' : '⚫ Hors ligne';
     }
 
-    function showChatInputArea() {
-        document.getElementById('chatInputArea').style.display = 'block';
-        document.getElementById('emptyChat').style.display = 'none';
-        document.getElementById('messageInput').focus();
-    }
-
     // =================== GESTION DES MESSAGES ===================
-
-    function saveMessageToHistory(targetUserName, messageData) {
-        if (!conversationHistory[targetUserName]) {
-            conversationHistory[targetUserName] = [];
-        }
-
-        conversationHistory[targetUserName].push({
-            senderName: messageData.senderName,
-            message: messageData.message,
-            timestamp: messageData.timestamp,
-            isOwn: messageData.isOwn,
-            id: Date.now() + Math.random()
-        });
-
-        console.log(`💾 Message sauvegardé pour ${targetUserName}:`, messageData);
-    }
-
-    function loadConversationHistory(userName) {
-        const messagesContainer = document.getElementById('chatMessages');
-        messagesContainer.innerHTML = '';
-
-        const messages = conversationHistory[userName] || [];
-
-        if (messages.length === 0) {
-            // Message de bienvenue
-            const welcomeMessage = {
-                senderName: userName,
-                message: `👋 Salut ! Je suis ${userName}. Comment ça va ?`,
-                timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-                isOwn: false
-            };
-
-            setTimeout(() => {
-                addMessageToChat(welcomeMessage);
-                saveMessageToHistory(userName, welcomeMessage);
-            }, 500);
-        } else {
-            messages.forEach(message => {
-                addMessageToChat(message);
-            });
-
-            console.log(`📜 Chargé ${messages.length} messages pour ${userName}`);
-        }
-    }
-
     function sendMessage() {
         const messageInput = document.getElementById('messageInput');
-        const message = messageInput.value.trim();
+        if (!messageInput || !selectedUser) return;
 
-        if (!message || !selectedUser) {
-            console.warn("⚠️ Pas de message ou utilisateur sélectionné");
-            return;
-        }
+        const message = messageInput.value.trim();
+        if (!message) return;
 
         const messageData = {
             senderName: currentUserName,
             message: message,
             timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-            isOwn: true
+            isOwn: true,
+            targetUserName: selectedUser.LastName || selectedUser.idclass
         };
 
-        // Sauvegarder immédiatement
-        saveMessageToHistory(selectedUser.name, messageData);
+        saveMessageToHistory(messageData.targetUserName, messageData);
+        addMessageToChat(messageData);
 
-        console.log(`📤 Envoi message pour ${selectedUser.name}:`, message);
-
-        // Envoyer via SignalR
-        connection.invoke("SendTeamMessage", message, currentUserName, selectedUser.name)
+        connection.invoke("SendTeamMessage", message, currentUserName, messageData.targetUserName)
             .then(() => {
                 messageInput.value = '';
                 messageInput.style.height = 'auto';
-                notifyTyping(false);
             })
             .catch(err => {
-                console.error("❌ Erreur envoi:", err);
-                showNotification("Erreur lors de l'envoi", "error");
+                console.error("[ERREUR] Envoi message:", err);
+                showErrorNotification("Erreur lors de l'envoi du message");
             });
+    }
+
+    function saveMessageToHistory(targetUserName, messageData) {
+        if (!targetUserName) return;
+
+        if (!conversationHistory[targetUserName]) {
+            conversationHistory[targetUserName] = [];
+        }
+
+        conversationHistory[targetUserName].push({
+            ...messageData,
+            id: Date.now() + Math.random()
+        });
+    }
+
+    function loadConversationHistory(targetUserName) {
+        const messagesContainer = document.getElementById('chatMessages');
+        if (!messagesContainer) return;
+
+        messagesContainer.innerHTML = '';
+        const messages = conversationHistory[targetUserName] || [];
+
+        if (messages.length === 0) {
+            const welcomeMessage = {
+                senderName: targetUserName,
+                message: `👋 Salut ! Je suis ${targetUserName}. Comment ça va ?`,
+                timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+                isOwn: false
+            };
+            
+            setTimeout(() => {
+                addMessageToChat(welcomeMessage);
+                saveMessageToHistory(targetUserName, welcomeMessage);
+            }, 500);
+        } else {
+            messages.forEach(message => addMessageToChat(message));
+        }
     }
 
     function addMessageToChat(messageData) {
         const messagesContainer = document.getElementById('chatMessages');
         if (!messagesContainer) return;
 
-        const existingTyping = document.getElementById('typing-indicator');
-        if (existingTyping) {
-            existingTyping.remove();
-        }
-
         const messageElement = document.createElement('div');
         messageElement.className = `message ${messageData.isOwn ? 'own' : ''}`;
 
-        const avatarSrc = messageData.isOwn ?
-            'https://ui-avatars.com/api/?name=' + encodeURIComponent(currentUserName) + '&size=100&background=667eea&color=fff' :
-            (selectedUser ? selectedUser.avatar : '');
+        const avatarSrc = messageData.isOwn
+            ? `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUserName)}&size=100&background=667eea&color=fff`
+            : selectedUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(messageData.senderName.substring(0,1))}&size=100&background=667eea&color=fff`;
 
         messageElement.innerHTML = `
             <img src="${avatarSrc}" alt="Avatar" class="message-avatar"
-                 onerror="this.src='https://ui-avatars.com/api/?name=User&size=100&background=667eea&color=fff'">
+                 onerror="this.src='https://ui-avatars.com/api/?name=U&size=100&background=667eea&color=fff'">
             <div class="message-content">
                 <p class="message-text">${escapeHtml(messageData.message)}</p>
                 <div class="message-time">${messageData.timestamp}</div>
@@ -840,137 +761,117 @@
 
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
 
-        // Animation
-        messageElement.style.opacity = '0';
-        messageElement.style.transform = 'translateY(20px)';
+    // =================== SIGNALR EVENT HANDLERS ===================
+    function initializeSignalR() {
+        connection.start()
+            .then(() => {
+                console.log("[SIGNALR] Connecté au hub");
+                connection.invoke("JoinChat", currentUserName);
+                updateConnectionStatus("connected");
+            })
+            .catch(err => {
+                console.error("[ERREUR] Connexion SignalR:", err);
+                updateConnectionStatus("disconnected");
+            });
 
-        requestAnimationFrame(() => {
-            messageElement.style.transition = 'all 0.3s ease';
-            messageElement.style.opacity = '1';
-            messageElement.style.transform = 'translateY(0)';
+        connection.on("ReceiveTeamMessage", (messageData) => {
+            console.log("[SIGNALR] Message reçu:", messageData);
+            
+            if (!messageData.senderName || !messageData.message) return;
+            
+            saveMessageToHistory(messageData.senderName, {
+                ...messageData,
+                isOwn: messageData.senderName === currentUserName
+            });
+
+            if (selectedUser && selectedUser.LastName === messageData.senderName) {
+                addMessageToChat({
+                    ...messageData,
+                    isOwn: messageData.senderName === currentUserName
+                });
+            }
+        });
+
+        connection.on("UserJoined", (userName) => {
+            console.log(`[SIGNALR] ${userName} a rejoint`);
+            updateUserOnlineStatus(userName, true);
+        });
+
+        connection.on("UserLeft", (userName) => {
+            console.log(`[SIGNALR] ${userName} a quitté`);
+            updateUserOnlineStatus(userName, false);
+        });
+
+        connection.on("ConnectedUsersList", (users) => {
+            console.log("[SIGNALR] Liste utilisateurs:", users);
+            connectedUsers = users;
+            updateAllUserStatuses();
         });
     }
 
-    // =================== ÉVÉNEMENTS SIGNALR ===================
-
-    connection.start().then(function () {
-        console.log("🚀 SignalR connecté avec vrais utilisateurs!");
-        updateConnectionStatus("connected");
-        connection.invoke("JoinChat", currentUserName);
-
-        // 🔄 CHARGER LES MEMBRES OU CRÉER DES DONNÉES DE TEST
-        if (!teamMembersFromServer || teamMembersFromServer.length === 0) {
-            console.warn("⚠️ Pas d'utilisateurs, création de données de test...");
-            createTestUsers();
-        } else {
-            loadTeamMembers();
-        }
-    }).catch(function (err) {
-        console.error("❌ Erreur connexion SignalR:", err);
-        updateConnectionStatus("disconnected");
-        showNotification("Erreur de connexion au chat", "error");
-    });
-
-    // Recevoir les messages
-    connection.on("ReceiveTeamMessage", function (messageData) {
-        console.log("📨 Message équipe reçu:", messageData);
-        saveMessageToHistory(messageData.targetUserName, messageData);
-
-        if (selectedUser &&
-            (selectedUser.name === messageData.targetUserName ||
-             messageData.senderName === currentUserName)) {
-
-            const isOwn = messageData.senderName === currentUserName;
-
-            addMessageToChat({
-                senderName: messageData.senderName,
-                message: messageData.message,
-                timestamp: messageData.timestamp,
-                isOwn: isOwn
-            });
-
-            if (document.hidden && !isOwn) {
-                showDesktopNotification(messageData.senderName, messageData.message);
-            }
-        }
-    });
-
-    connection.on("UserJoined", function (userName) {
-        console.log(`👋 ${userName} a rejoint`);
-        showNotification(`${userName} a rejoint le chat`, "success");
-        updateUserOnlineStatus(userName, true);
-    });
-
-    connection.on("UserLeft", function (userName) {
-        console.log(`👋 ${userName} est parti`);
-        showNotification(`${userName} a quitté le chat`, "info");
-        updateUserOnlineStatus(userName, false);
-    });
-
-    connection.on("ConnectedUsersList", function (users) {
-        console.log("👥 Utilisateurs connectés:", users);
-        connectedUsers = users;
-        updateAllUserStatuses();
-    });
-
-    // =================== FONCTIONS UTILITAIRES ===================
-
+    // =================== UTILITAIRES ===================
     function updateConnectionStatus(status) {
         const statusElement = document.getElementById('connectionStatus');
         const textElement = document.getElementById('connectionText');
+        if (!statusElement || !textElement) return;
 
         statusElement.className = `connection-status ${status}`;
+        statusElement.style.display = 'block';
 
-        switch(status) {
-            case 'connected':
-                textElement.textContent = '🟢 Connecté au chat';
-                statusElement.style.display = 'block';
-                setTimeout(() => statusElement.style.display = 'none', 3000);
-                break;
-            case 'connecting':
-                textElement.textContent = '🟡 Connexion...';
-                statusElement.style.display = 'block';
-                break;
-            case 'disconnected':
-                textElement.textContent = '🔴 Déconnecté';
-                statusElement.style.display = 'block';
-                break;
+        const statusMessages = {
+            connected: { text: '🟢 Connecté', timeout: 3000 },
+            disconnected: { text: '🔴 Déconnecté', timeout: null },
+            connecting: { text: '🟡 Connexion...', timeout: null }
+        };
+
+        textElement.textContent = statusMessages[status]?.text || status;
+        
+        if (statusMessages[status]?.timeout) {
+            setTimeout(() => statusElement.style.display = 'none', statusMessages[status].timeout);
         }
     }
 
     function updateUserOnlineStatus(userName, isOnline) {
-        // ✨ METTRE À JOUR LE STATUT DES VRAIS UTILISATEURS
-        const member = teamMembersFromServer.find(m => m.name === userName);
+        if (!teamMembersFromServer || !userName) return;
+
+        const member = teamMembersFromServer.find(m => 
+            (m.LastName === userName) || (m.idclass.toString() === userName)
+        );
+        
         if (member) {
             member.status = isOnline ? 'online' : 'offline';
-
-            const statusDot = document.getElementById(`status-${member.id}`);
-            const statusText = document.getElementById(`status-text-${member.id}`);
-
-            if (statusDot && statusText) {
-                statusDot.className = `status-dot ${member.status}`;
-                statusText.textContent = isOnline ? '🟢 En ligne' : (member.position || 'Hors ligne');
-            }
+            
+            const statusDot = document.getElementById(`status-${member.idclass}`);
+            const statusText = document.getElementById(`status-text-${member.idclass}`);
+            
+            if (statusDot) statusDot.className = `status-dot ${member.status}`;
+            if (statusText) statusText.textContent = isOnline ? '🟢 En ligne' : (member.position || 'Hors ligne');
         }
     }
 
     function updateAllUserStatuses() {
         teamMembersFromServer.forEach(member => {
-            const isOnline = connectedUsers.some(u => u.userName === member.name);
-            updateUserOnlineStatus(member.name, isOnline);
+            const isOnline = connectedUsers.some(u => 
+                u.userName === member.LastName || u.userName === member.idclass.toString()
+            );
+            updateUserOnlineStatus(member.LastName || member.idclass, isOnline);
         });
     }
 
     function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
     }
 
-    function showNotification(message, type) {
+    function showErrorNotification(message) {
         const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
+        notification.className = 'notification error';
         notification.textContent = message;
         notification.style.cssText = `
             position: fixed;
@@ -978,44 +879,31 @@
             right: 20px;
             padding: 12px 20px;
             border-radius: 8px;
+            background: #e74c3c;
             color: white;
             font-weight: 600;
             z-index: 9999;
             animation: slideInRight 0.3s ease;
         `;
 
-        const colors = {
-            success: '#27ae60',
-            error: '#e74c3c',
-            info: '#3498db'
-        };
-
-        notification.style.background = colors[type] || colors.info;
         document.body.appendChild(notification);
-
-        setTimeout(() => {
-            notification.style.animation = 'slideOutRight 0.3s ease';
-            setTimeout(() => notification.remove(), 300);
-        }, 3000);
+        setTimeout(() => notification.remove(), 3000);
     }
 
-    function showDesktopNotification(senderName, message) {
-        if (Notification.permission === "granted") {
-            new Notification(`💬 Message de ${senderName}`, {
-                body: message,
-                icon: '/favicon.ico',
-                tag: 'team-chat'
-            });
-        }
+    function showChatInputArea() {
+        const chatInputArea = document.getElementById('chatInputArea');
+        const emptyChat = document.getElementById('emptyChat');
+        
+        if (chatInputArea) chatInputArea.style.display = 'block';
+        if (emptyChat) emptyChat.style.display = 'none';
+        
+        const messageInput = document.getElementById('messageInput');
+        if (messageInput) messageInput.focus();
     }
 
-    function notifyTyping(isTyping) {
-        // Implémentation de l'indicateur de frappe
-    }
-
-    // =================== EVENT LISTENERS ===================
-
+    // =================== INITIALISATION ===================
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialisation des écouteurs d'événements
         const messageInput = document.getElementById('messageInput');
         const sendButton = document.getElementById('sendButton');
         const searchInput = document.getElementById('searchInput');
@@ -1041,39 +929,34 @@
         if (searchInput) {
             searchInput.addEventListener('input', function() {
                 const searchTerm = this.value.toLowerCase();
-                const members = document.querySelectorAll('.member-item');
-
-                members.forEach(member => {
-                    const name = member.querySelector('.member-name').textContent.toLowerCase();
-                    if (name.includes(searchTerm)) {
-                        member.style.display = 'flex';
-                    } else {
-                        member.style.display = 'none';
-                    }
+                document.querySelectorAll('.member-item').forEach(member => {
+                    const name = member.dataset.userName.toLowerCase();
+                    member.style.display = name.includes(searchTerm) ? 'flex' : 'none';
                 });
             });
         }
 
-        // Demander permission pour notifications
+        // Demander la permission pour les notifications
         if (Notification.permission === "default") {
-            Notification.requestPermission();
+            Notification.requestPermission().catch(console.error);
         }
+
+        // Charger les données initiales
+        loadInitialData();
     });
 
-    // =================== DEBUG ===================
-    window.teamChatReal = {
-        connection: connection,
-        currentUser: currentUserName,
-        selectedUser: () => selectedUser,
-        connectedUsers: () => connectedUsers,
-        conversationHistory: () => conversationHistory,
-        teamMembers: teamMembersFromServer
+    // Export pour le debug
+    window.teamChatDebug = {
+        connection,
+        currentUser: { name: currentUserName, id: currentUserId },
+        getSelectedUser: () => selectedUser,
+        getConnectedUsers: () => connectedUsers,
+        getConversationHistory: () => conversationHistory,
+        getTeamMembers: () => teamMembersFromServer
     };
-
-    console.log("🎯 Team Chat avec vrais utilisateurs initialisé!");
-    console.log("👥 Membres d'équipe depuis la base de données:", teamMembersFromServer);
 </script>
 
 @section Scripts {
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/5.0.11/signalr.min.js"></script>
 }

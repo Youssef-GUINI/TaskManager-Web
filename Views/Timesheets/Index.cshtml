@@ -847,31 +847,69 @@
                 '</div>' +
             '</div>';
     }
-
-    function updateTaskDate(taskId, newDate) {
-        const formattedDate = newDate.toISOString().split('T')[0];
-
-        fetch('/Timesheets/UpdateTaskDate', {
+async function updateTaskDate(taskId, newDate) {
+    try {
+        const response = await fetch('/Timesheets/UpdateTaskDate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: parseInt(taskId), newDate: formattedDate })
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                showNotification(result.message, "success");
-            } else {
-                showNotification(result.message, "error");
-                if (calendar) calendar.refetchEvents();
-            }
-        })
-        .catch(error => {
-            console.error("❌ Erreur:", error);
-            showNotification("Erreur de connexion", "error");
-            if (calendar) calendar.refetchEvents();
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                Id: taskId,  // Important: 'Id' avec majuscule pour matcher le C#
+                NewDate: newDate.toISOString()
+            })
         });
-    }
 
+        if (!response.ok) {
+            const error = await response.json();
+            console.error('Erreur serveur:', error);
+            alert(`Erreur: ${error.message || 'Échec de la mise à jour'}`);
+            return false;
+        }
+        
+        return true;
+    } catch (error) {
+        console.error('Erreur réseau:', error);
+        alert('Erreur réseau - voir la console');
+        return false;
+    }
+}
+async function updateTaskStatus(taskId, newStatus) {
+    try {
+        const response = await fetch('/Timesheets/UpdateTaskStatus', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+            },
+            body: JSON.stringify({
+                TaskId: taskId,
+                NewStatus: newStatus
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            // Mise à jour visuelle immédiate
+            const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+            if (taskElement) {
+                taskElement.style.backgroundColor = result.newColor;
+                taskElement.style.borderColor = result.borderColor;
+            }
+            return true;
+        } else {
+            console.error('Erreur:', result.message);
+            alert('Échec: ' + (result.message || 'Erreur inconnue'));
+            return false;
+        }
+    } catch (error) {
+        console.error('Erreur réseau:', error);
+        alert('Erreur de connexion');
+        return false;
+    }
+}
     function showLoading() {
         if (loadingSpinner) loadingSpinner.style.display = 'block';
         if (calendarElement) calendarElement.style.opacity = '0.5';
