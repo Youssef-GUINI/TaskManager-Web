@@ -9,19 +9,23 @@ namespace TaskManager.data
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
+            // Configuration pour lire appsettings.json
             var configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("appsettings.json")
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
                 .Build();
 
             var optionsBuilder = new DbContextOptionsBuilder<ApplicationDbContext>();
+
+            // Récupérer la chaîne de connexion depuis appsettings.json
             var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-            // ✨ CHANGEMENT : MySQL au lieu de SQL Server
-            optionsBuilder.UseMySql(
-                connectionString,
-                new MySqlServerVersion(new Version(8, 0, 33)) // Votre version MySQL
-            );
+            // Configuration MySQL avec les bonnes options
+            optionsBuilder.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString), mySqlOptions =>
+            {
+                // Options MySQL pour améliorer les performances
+                mySqlOptions.EnableRetryOnFailure(3);
+            });
 
             return new ApplicationDbContext(optionsBuilder.Options);
         }

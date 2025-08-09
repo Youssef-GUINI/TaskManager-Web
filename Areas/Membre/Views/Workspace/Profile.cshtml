@@ -1,0 +1,475 @@
+﻿@model TaskManager.Models.UserProfileVM
+
+@{
+    ViewData["Title"] = "Profil Utilisateur";
+}
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .profile-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+    }
+
+    /*.profile-header {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        margin-bottom: 30px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+    }*/
+    
+    .profile-header {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+
+    max-width: 300px;  /* ✅ limite la largeur */
+}
+
+
+
+.profile-main {
+    margin-top: 1000px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-width: 900px;         /* Limite la largeur */
+    margin: 0 auto;           /* Centre horizontalement */
+}
+
+    .profile-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .stats-card, .activity-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 20px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        border: 5px solid rgba(102, 126, 234, 0.2);
+        object-fit: cover;
+    }
+
+    .profile-avatar-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .online-indicator {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        width: 20px;
+        height: 20px;
+        background: #27ae60;
+        border-radius: 50%;
+        border: 3px solid white;
+    }
+
+    .profile-info {
+        flex: 1;
+        margin-left: 30px;
+    }
+
+    .profile-name {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .profile-role {
+        color: #667eea;
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+
+    .profile-department {
+        color: #7f8c8d;
+        margin-bottom: 20px;
+    }
+
+    .tabs {
+        display: flex;
+        border-bottom: 2px solid #ecf0f1;
+        margin-bottom: 20px;
+    }
+
+    .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        border: none;
+        background: none;
+        font-size: 1rem;
+        color: #7f8c8d;
+        transition: color 0.3s ease;
+    }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+    .tab-content {
+        display: none;
+    }
+
+        .tab-content.active {
+            display: block;
+        }
+
+    .task-item {
+        background: rgba(102, 126, 234, 0.05);
+        border-radius: 10px;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-left: 4px solid #667eea;
+    }
+
+    .task-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 5px;
+    }
+
+    .task-description {
+        color: #7f8c8d;
+        font-size: 0.9rem;
+        margin-bottom: 10px;
+    }
+
+    .task-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .task-date {
+        color: #7f8c8d;
+        font-size: 0.8rem;
+    }
+
+    .task-badges {
+        display: flex;
+        gap: 10px;
+    }
+
+    .badge {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+        .badge.priority-high {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .badge.priority-medium {
+            background: #f39c12;
+            color: white;
+        }
+
+        .badge.priority-low {
+            background: #27ae60;
+            color: white;
+        }
+
+        .badge.status-todo {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .badge.status-inprogress {
+            background: #3498db;
+            color: white;
+        }
+
+        .badge.status-completed {
+            background: #27ae60;
+            color: white;
+        }
+
+    .task-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .btn-edit-task, .btn-delete-task {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: white;
+    }
+
+    .btn-edit-task {
+        background: #3498db;
+    }
+
+    .btn-delete-task {
+        background: #e74c3c;
+    }
+
+    .btn-back {
+        background: none;
+        border: none;
+        color: #7f8c8d;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: color 0.3s ease;
+        text-decoration: none;
+    }
+
+        .btn-back:hover {
+            color: #2c3e50;
+            text-decoration: none;
+        }
+
+    .btn-edit {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .stat-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+    .stat-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: #7f8c8d;
+    }
+
+    .stat-value {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 15px 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+    .activity-indicator {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: #667eea;
+    }
+
+        .activity-indicator.success {
+            background: #27ae60;
+        }
+
+        .activity-indicator.warning {
+            background: #f39c12;
+        }
+
+        .activity-indicator.info {
+            background: #3498db;
+        }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-description {
+        color: #2c3e50;
+        font-size: 0.9rem;
+        margin-bottom: 5px;
+    }
+
+    .activity-time {
+        color: #7f8c8d;
+        font-size: 0.8rem;
+    }
+
+    .bio-section, .contact-info {
+        margin-bottom: 30px;
+    }
+
+        .bio-section h3, .contact-info h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .bio-section p {
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
+        .contact-info p {
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
+    .no-tasks {
+        text-align: center;
+        color: #7f8c8d;
+        padding: 40px;
+    }
+
+   @@media (max-width: 768px) {
+        .profile-content
+
+    {
+        grid-template-columns: 1fr;
+    }
+
+    .profile-header-content {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .profile-info {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+
+    }
+</style>
+
+<div class="profile-container">
+    <!-- Header -->
+    <div class="profile-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="@Url.Action("Index", "Workspace")" class="btn-back">
+                <i class="fas fa-arrow-left"></i>
+                Retour au tableau de bord
+            </a>
+        </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+        <!-- Main Profile -->
+        <div class="profile-main">
+            <div class="d-flex align-items-start profile-header-content">
+                <div class="profile-avatar-container">
+                    <img src="@Model.Avatar" alt="Profile" class="profile-avatar">
+                    <div class="online-indicator"></div>
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name">@Model.Name</h1>
+                    <p class="profile-role">@Model.Role</p>
+                    <p class="profile-department">@Model.Department</p>
+                </div>
+            </div>
+
+            <!-- Tab Content - Profile -->
+            <div id="profile-tab" class="tab-content active">
+                <div class="bio-section">
+                    <h3>À propos</h3>
+                    <p>@Model.Bio</p>
+                </div>
+
+                <div class="contact-info">
+                    <h3>Informations de contact</h3>
+                    <p><strong>Email:</strong> @Model.Email</p>
+                    <p><strong>Téléphone:</strong> @Model.Phone</p>
+                    <p><strong>Localisation:</strong> @Model.Location</p>
+                    <p><strong>Email de recuperation </strong> @Model.JoinDate.ToString("MMMM yyyy")</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Gestion des onglets
+    function showTab(tabName) {
+        // Masquer tous les contenus d'onglets
+        const tabContents = document.querySelectorAll('.tab-content');
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+        });
+
+        // Désactiver tous les onglets
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+        });
+
+        // Afficher le contenu de l'onglet sélectionné
+        document.getElementById(tabName + '-tab').classList.add('active');
+
+        // Activer l'onglet sélectionné
+        event.target.classList.add('active');
+    }
+
+    // Supprimer une tâche
+    async function deleteTask(taskId, taskTitle) {
+        if (confirm(`Êtes-vous sûr de vouloir supprimer la tâche "${taskTitle}" ?`)) {
+            try {
+                const response = await fetch(`@Url.Action("DeleteTask", "Workspace")/${taskId}`, {
+                    method: 'DELETE'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    location.reload(); // Recharger la page pour voir les changements
+                } else {
+                    alert('Erreur lors de la suppression de la tâche');
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur lors de la communication avec le serveur');
+            }
+        }
+    }
+</script>
+
+@section Scripts {
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+}

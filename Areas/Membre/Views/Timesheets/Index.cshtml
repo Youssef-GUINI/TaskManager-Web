@@ -1,0 +1,907 @@
+﻿@model IEnumerable<TaskManager.Models.TaskModel>
+@{
+    ViewData["Title"] = "📅 Calendrier";
+    var stats = ViewBag.Stats;
+}
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- FullCalendar CSS -->
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+
+<style>
+    /* =================== VARIABLES CSS =================== */
+    .modern-container {
+        --primary-color: #667eea;
+        --secondary-color: #764ba2;
+        --success-color: #28a745;
+        --warning-color: #ffc107;
+        --danger-color: #dc3545;
+        --info-color: #17a2b8;
+        --light-bg: #f8f9fa;
+        --white: #ffffff;
+        --text-dark: #2c3e50;
+        --text-muted: #6c757d;
+        --border-color: #e9ecef;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        --radius: 12px;
+    }
+
+    /* =================== CONTAINER PRINCIPAL =================== */
+    .modern-container {
+        background: #f8f9fa;
+        min-height: 100vh;
+        padding: 20px 0;
+    }
+
+    /* =================== EN-TÊTE MODERNE =================== */
+    .modern-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        padding: 30px 0;
+        margin-bottom: 30px;
+        border-radius: 0 0 20px 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .header-title h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin: 0;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-title p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+        font-size: 1.1rem;
+    }
+
+    .header-actions .btn {
+        margin: 0 5px;
+        padding: 12px 24px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+
+        .header-actions .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        }
+
+    /* =================== CARTES STATISTIQUES =================== */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+        position: relative;
+        overflow: hidden;
+    }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+
+    .stat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+
+    .stat-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: #ffffff;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #2c3e50;
+        margin: 10px 0;
+        line-height: 1;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.95rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* =================== CALENDRIER MODERNE =================== */
+    .calendar-container {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e9ecef;
+    }
+
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .calendar-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .calendar-filters {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
+
+    .filter-select {
+        padding: 10px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        background: #ffffff;
+        font-size: 0.9rem;
+        min-width: 160px;
+        transition: all 0.3s ease;
+        color: #2c3e50;
+    }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+    .refresh-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: #ffffff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+    /* =================== LÉGENDE =================== */
+    .calendar-legend {
+        display: flex;
+        gap: 25px;
+        margin-bottom: 25px;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+
+    .legend-color {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    }
+
+    /* =================== FULLCALENDAR STYLES =================== */
+    .fc-toolbar-title {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        color: #2c3e50 !important;
+    }
+
+    .fc-button-primary {
+        background: linear-gradient(135deg, #667eea, #764ba2) !important;
+        border: none !important;
+        font-weight: 600 !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
+        transition: all 0.3s ease !important;
+    }
+
+        .fc-button-primary:hover {
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4) !important;
+        }
+
+    .fc-event {
+        border-radius: 8px !important;
+        border: none !important;
+        padding: 4px 8px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1) !important;
+    }
+
+        .fc-event:hover {
+            transform: scale(1.05) !important;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+            z-index: 999 !important;
+        }
+
+    .fc-daygrid-event {
+        white-space: normal !important;
+    }
+
+    /* =================== MODAL =================== */
+    .task-modal .modal-content {
+        border-radius: 20px;
+        border: none;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .task-modal-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: #ffffff;
+        padding: 25px 30px;
+        border: none;
+    }
+
+    .task-modal-body {
+        padding: 30px;
+    }
+
+    .task-detail-row {
+        display: flex;
+        align-items: center;
+        padding: 15px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+        .task-detail-row:last-child {
+            border-bottom: none;
+        }
+
+    .task-detail-icon {
+        width: 50px;
+        color: #667eea;
+        font-size: 1.2rem;
+    }
+
+    .task-detail-content {
+        flex: 1;
+    }
+
+    .task-detail-label {
+        font-size: 0.85rem;
+        color: #6c757d;
+        margin-bottom: 2px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .task-detail-value {
+        font-weight: 600;
+        color: #2c3e50;
+        font-size: 1rem;
+    }
+
+    /* =================== BADGES =================== */
+    .priority-badge {
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .priority-high {
+        background: #dc3545;
+        color: #ffffff;
+    }
+
+    .priority-medium {
+        background: #ffc107;
+        color: #2c3e50;
+    }
+
+    .priority-low {
+        background: #17a2b8;
+        color: #ffffff;
+    }
+
+    .status-badge {
+        padding: 8px 18px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-completed {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-in-progress {
+        background: #cce7ff;
+        color: #004085;
+    }
+
+    .status-to-do {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    /* =================== SPINNER =================== */
+    .loading-spinner {
+        display: none;
+        text-align: center;
+        padding: 40px;
+    }
+
+    .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid #e9ecef;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    /* =================== ANIMATIONS =================== */
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    @@keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+    }
+
+    /* =================== RESPONSIVE =================== */
+    @@media (max-width: 768px) {
+        .header-content {
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .header-title h1 {
+            font-size: 2rem;
+        }
+
+        .stats-container {
+            grid-template-columns: 1fr;
+        }
+
+        .calendar-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .calendar-filters {
+            justify-content: center;
+        }
+
+        .filter-select {
+            flex: 1;
+            min-width: auto;
+        }
+
+        .calendar-legend {
+            justify-content: center;
+            gap: 15px;
+        }
+    }
+
+    /* =================== NOTIFICATIONS =================== */
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 25px;
+        border-radius: 10px;
+        color: #ffffff;
+        font-weight: 600;
+        z-index: 9999;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+    }
+
+        .notification.success {
+            background: #28a745;
+        }
+
+        .notification.error {
+            background: #dc3545;
+        }
+
+        .notification.info {
+            background: #17a2b8;
+        }
+</style>
+
+<div class="modern-container">
+    <!-- En-tête moderne -->
+    <div class="modern-header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-title">
+                    <h1>Calendrier</h1>
+                    <p>Planification et suivi des tâches</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Cartes de statistiques -->
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@(stats?.TotalTasks ?? 0)</div>
+                <div class="stat-label">Total des Tâches</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #ffc107, #fd7e14);">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@(stats?.DueToday ?? 0)</div>
+                <div class="stat-label">Échéance Aujourd'hui</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #dc3545, #bd2130);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@(stats?.Overdue ?? 0)</div>
+                <div class="stat-label">En Retard</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-header">
+                    <div class="stat-icon" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+                <div class="stat-value">@(stats?.Completed ?? 0)</div>
+                <div class="stat-label">Terminées</div>
+            </div>
+        </div>
+
+        <!-- Calendrier -->
+        <div class="calendar-container">
+            <div class="calendar-header">
+                <h3 class="calendar-title">
+                    <i class="fas fa-calendar-alt"></i>
+                    Calendrier des Tâches
+                </h3>
+
+                <div class="calendar-filters">
+                    <select id="statusFilter" class="filter-select">
+                        <option value="">📋 Tous les statuts</option>
+                        <option value="To Do">📝 À faire</option>
+                        <option value="In Progress">⚡ En cours</option>
+                        <option value="Completed">✅ Terminé</option>
+                    </select>
+
+                    <button id="refreshCalendar" class="refresh-btn">
+                        <i class="fas fa-sync-alt"></i>
+                        Actualiser
+                    </button>
+                </div>
+            </div>
+
+            <!-- Légende des couleurs -->
+            <div class="calendar-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #dc3545;"></div>
+                    <span>Priorité Haute</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #ffc107;"></div>
+                    <span>Priorité Moyenne</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #17a2b8;"></div>
+                    <span>Priorité Faible</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: #28a745;"></div>
+                    <span>Terminé</span>
+                </div>
+            </div>
+
+            <!-- Spinner de chargement -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner"></div>
+                <p class="mt-3">Chargement du calendrier...</p>
+            </div>
+
+            <!-- Le calendrier -->
+            <div id="calendar"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de détails -->
+<div class="modal fade task-modal" id="taskDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="task-modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-tasks me-2"></i>Détails de la Tâche
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body task-modal-body" id="taskDetailContent">
+                <!-- Contenu chargé dynamiquement -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Fermer
+                </button>
+                <a href="#" id="editTaskBtn" class="btn btn-primary">
+                    <i class="fas fa-edit me-1"></i>Modifier
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+
+<script>
+    // Variables globales
+    let calendarEvents = [];
+    let calendar;
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    const calendarElement = document.getElementById('calendar');
+
+    // Charger les événements depuis le serveur
+    try {
+        const eventsData = '@Html.Raw(ViewBag.CalendarEventsJson ?? "[]")';
+        if (eventsData && eventsData !== '[]') {
+            calendarEvents = JSON.parse(eventsData);
+        }
+        console.log("📅 Événements chargés:", calendarEvents.length);
+    } catch (error) {
+        console.error("❌ Erreur parsing JSON:", error);
+        calendarEvents = [];
+    }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeCalendar();
+        setupFilters();
+        console.log("✅ Calendrier initialisé");
+    });
+
+    function initializeCalendar() {
+        if (!calendarElement) {
+            console.error("❌ Élément calendrier non trouvé");
+            return;
+        }
+
+        calendar = new FullCalendar.Calendar(calendarElement, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            firstDay: 1,
+            height: 'auto',
+
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+
+            buttonText: {
+                today: 'Aujourd\'hui',
+                month: 'Mois',
+                week: 'Semaine',
+                list: 'Liste'
+            },
+
+            events: calendarEvents,
+            dayMaxEvents: 3,
+            moreLinkClick: 'popover',
+
+            eventClick: function(info) {
+                showTaskDetails(info.event.id);
+                info.jsEvent.preventDefault();
+            },
+
+            editable: true,
+            eventDrop: function(info) {
+                updateTaskDate(info.event.id, info.event.start);
+            },
+
+            loading: function(isLoading) {
+                if (isLoading) {
+                    showLoading();
+                } else {
+                    hideLoading();
+                }
+            },
+
+            noEventsText: 'Aucune tâche à afficher'
+        });
+
+        calendar.render();
+        console.log("✅ Calendrier rendu");
+    }
+
+    function setupFilters() {
+        const userFilter = document.getElementById('userFilter');
+        const statusFilter = document.getElementById('statusFilter');
+        const refreshBtn = document.getElementById('refreshCalendar');
+
+        if (userFilter) userFilter.addEventListener('change', applyFilters);
+        if (statusFilter) statusFilter.addEventListener('change', applyFilters);
+        if (refreshBtn) refreshBtn.addEventListener('click', refreshCalendar);
+    }
+
+    function applyFilters() {
+        const userId = document.getElementById('userFilter')?.value;
+        const status = document.getElementById('statusFilter')?.value;
+
+        let filteredEvents = [...calendarEvents];
+
+        if (userId) {
+            filteredEvents = filteredEvents.filter(event =>
+                event.assignedToId && event.assignedToId.toString() === userId
+            );
+        }
+
+        if (status) {
+            filteredEvents = filteredEvents.filter(event => event.status === status);
+        }
+
+        if (calendar) {
+            calendar.removeAllEvents();
+            calendar.addEventSource(filteredEvents);
+        }
+
+        console.log("🔍 Filtres appliqués:", filteredEvents.length, "tâches");
+    }
+
+    function refreshCalendar() {
+        console.log("🔄 Actualisation...");
+        showLoading();
+
+        fetch('/Membre/Timesheets/GetTasksJson')
+            .then(response => response.json())
+            .then(data => {
+                calendarEvents = data;
+                if (calendar) {
+                    calendar.removeAllEventSources();
+                    calendar.addEventSource(data);
+                    applyFilters();
+                }
+                showNotification("Calendrier actualisé", "success");
+            })
+            .catch(error => {
+                console.error("❌ Erreur:", error);
+                showNotification("Erreur d'actualisation", "error");
+            })
+            .finally(() => {
+                hideLoading();
+            });
+    }
+
+    /* function showTaskDetails(taskId) {
+        console.log("👁️ Affichage détails:", taskId);
+
+        fetch('/Membre/Timesheets/GetTaskDetails/' + taskId)
+            .then(response => response.json())
+            .then(task => {
+                displayTaskDetails(task);
+                document.getElementById('editTaskBtn').href = '/Membre/Timesheets/Edit/' + task.id;
+
+                const modal = new bootstrap.Modal(document.getElementById('taskDetailModal'));
+                modal.show();
+            })
+            .catch(error => {
+                console.error("❌ Erreur détails:", error);
+                showNotification("Erreur de chargement", "error");
+            });
+    } */
+function showTaskDetails(taskId) {
+    console.log("👁️ Affichage détails:", taskId);
+
+    fetch('/Membre/Timesheets/GetTaskDetails?id=' + taskId)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("Réponse non OK");
+            }
+            return response.json();
+        })
+        .then(task => {
+            displayTaskDetails(task);
+            document.getElementById('editTaskBtn').href = '/Membre/Timesheets/Edit/' + task.id;
+
+            const modal = new bootstrap.Modal(document.getElementById('taskDetailModal'));
+            modal.show();
+        })
+        .catch(error => {
+            console.error("❌ Erreur détails:", error);
+            showNotification("Erreur de chargement", "error");
+        });
+}
+
+
+    function displayTaskDetails(task) {
+        const content = document.getElementById('taskDetailContent');
+
+        content.innerHTML =
+            '<div class="task-detail-row">' +
+                '<div class="task-detail-icon"><i class="fas fa-heading"></i></div>' +
+                '<div class="task-detail-content">' +
+                    '<div class="task-detail-label">Titre</div>' +
+                    '<div class="task-detail-value">' + (task.title || 'Sans titre') + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="task-detail-row">' +
+                '<div class="task-detail-icon"><i class="fas fa-align-left"></i></div>' +
+                '<div class="task-detail-content">' +
+                    '<div class="task-detail-label">Description</div>' +
+                    '<div class="task-detail-value">' + (task.description || 'Aucune description') + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="task-detail-row">' +
+                '<div class="task-detail-icon"><i class="fas fa-calendar-day"></i></div>' +
+                '<div class="task-detail-content">' +
+                    '<div class="task-detail-label">Date d\'échéance</div>' +
+                    '<div class="task-detail-value">' + (task.dueDate || 'Non définie') + '</div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="task-detail-row">' +
+                '<div class="task-detail-icon"><i class="fas fa-user"></i></div>' +
+                '<div class="task-detail-content">' +
+                    '<div class="task-detail-label">Assigné à</div>' +
+                    '<div class="task-detail-value">' + (task.assignedTo || 'Non assigné') + '</div>' +
+                '</div>' +
+            '</div>';
+    }
+
+    function updateTaskDate(taskId, newDate) {
+        const formattedDate = newDate.toISOString().split('T')[0];
+
+        fetch('/Membre/Timesheets/UpdateTaskDate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: parseInt(taskId), newDate: formattedDate })
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                showNotification(result.message, "success");
+            } else {
+                showNotification(result.message, "error");
+                if (calendar) calendar.refetchEvents();
+            }
+        })
+        .catch(error => {
+            console.error("❌ Erreur:", error);
+            showNotification("Erreur de connexion", "error");
+            if (calendar) calendar.refetchEvents();
+        });
+    }
+
+    function showLoading() {
+        if (loadingSpinner) loadingSpinner.style.display = 'block';
+        if (calendarElement) calendarElement.style.opacity = '0.5';
+    }
+
+    function hideLoading() {
+        if (loadingSpinner) loadingSpinner.style.display = 'none';
+        if (calendarElement) calendarElement.style.opacity = '1';
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = 'notification ' + type;
+        notification.textContent = message;
+
+        document.body.appendChild(notification);
+
+        setTimeout(function() {
+            if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+            }
+        }, 4000);
+    }
+
+    console.log("🎯 Calendrier moderne initialisé!");
+</script>

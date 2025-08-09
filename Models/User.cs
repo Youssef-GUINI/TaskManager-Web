@@ -6,7 +6,7 @@ namespace TaskManager.Models
 {
     public class User : IdentityUser
     {
-        public int Idclass { get; set; }
+
         [Required(ErrorMessage = "First name is required")]
         [MaxLength(100, ErrorMessage = "First name cannot exceed 100 characters")]
         public string FirstName { get; set; } = string.Empty;

@@ -9,7 +9,7 @@ namespace TaskManager.Models
 
         [Required(ErrorMessage = "Le titre est requis")]
         [StringLength(200, ErrorMessage = "Le titre ne peut pas dépasser 200 caractères")]
-        public string Title { get; set; } = "";
+        public string Title { get; set; } = string.Empty;
 
         [StringLength(1000, ErrorMessage = "La description ne peut pas dépasser 1000 caractères")]
         public string Description { get; set; } = "";

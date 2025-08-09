@@ -20,7 +20,7 @@ namespace TaskManager.data
 
         public async Task SeedRolesAndUsersAsync()
         {
-            Console.WriteLine("🌱 Seeder lancé..."); 
+            Console.WriteLine("🌱 Seeder lancé...");
             string[] roles = { "Admin", "Membre" };
 
             foreach (var role in roles)
@@ -35,27 +35,27 @@ namespace TaskManager.data
 
             var membres = new List<(string FirstName, string LastName, string Email, string RecoveryEmail, string Phone, string Position, string Department, string Bio, string AvatarUrl, string ManagerEmail)>
             {
-                ("Douae", "Bouch", "douaebouch@sqli.com", "dohabouchikhi9@gmail.com", "0611111222", "Stagiaire", "Symfony", "Développement Symfony, Twig","/images/avatars/default.jpg", "youssefguini@sqli.com"),
+                ("Douae", "Bouch", "douaebouch@sqli.com", "dohabouchikhi9@gmail.com", "0611111222", "Stagiaire", "Symfony", "Développement Symfony, Twig","/images/avatars/default.jpg", "bouchikhidoha@sqli.com"),
                 ("Nouha", "Benahmed", "nouha@sqli.com", "nouha.recovery@gmail.com", "0611111111", "Stagiaire", "Symfony", "Développement Symfony, Twig","/images/avatars/default.jpg", "youssefguini@sqli.com"),
                 ("Zineb", "Didine", "zineb@sqli.com", "zineb.recovery@gmail.com", "0622222222", "Stagiaire", "IT", "Infrastructure et réseaux","/images/avatars/default.jpg", "bouchikhidoha@sqli.com"),
                 ("Fatima", "Zahra", "fatima@sqli.com", "fatima@gmail.com", "0633333333", "Stagiaire", "Java", "Spring Boot, Hibernate","/images/avatars/default.jpg", "bouchikhidoha@sqli.com"),
-                ("Mohamed", "Alami", "mohamed@sqli.com", "mohamed@gmail.com", "0644444444", "Stagiaire", ".NET", "C#, Razor Pages","/images/avatars/default.jpg", "bouchikhidoha@sqli.com")
+                ("Mohamed", "Alami", "mohamed@sqli.com", "mohamed@gmail.com", "0644444444", "Stagiaire", ".NET", "C#, Razor Pages","/images/avatars/default.jpg", "youssefguini@sqli.com")
             };
 
             // Créer d'abord tous les admins
             foreach (var admin in admins)
-                await CreateUser(admin, "Admin", "Admin123", null);
+                await CreateUser(admin, "Admin", "Admin@123", null);
 
             // Puis créer les membres avec leur manager
             foreach (var membre in membres)
             {
                 var manager = await _userManager.FindByEmailAsync(membre.ManagerEmail);
-                await CreateUser(membre, "Membre", "password123", manager?.Id);
+                await CreateUser(membre, "Membre", "Password@123", manager?.Id);
             }
         }
 
         private async Task CreateUser(
-            (string FirstName, string LastName, string Email, string RecoveryEmail, string Phone, string Position, string Department, string Bio, string AvatarUrl) data, 
+            (string FirstName, string LastName, string Email, string RecoveryEmail, string Phone, string Position, string Department, string Bio, string AvatarUrl) data,
             string role, string password, string managerId)
         {
             var (firstName, lastName, email, recoveryEmail, phone, position, department, bio, avatarUrl) = data;
@@ -97,7 +97,7 @@ namespace TaskManager.data
         }
 
         private async Task CreateUser(
-            (string FirstName, string LastName, string Email, string RecoveryEmail, string Phone, string Position, string Department, string Bio, string AvatarUrl, string ManagerEmail) data, 
+            (string FirstName, string LastName, string Email, string RecoveryEmail, string Phone, string Position, string Department, string Bio, string AvatarUrl, string ManagerEmail) data,
             string role, string password, string managerId)
         {
             var (firstName, lastName, email, recoveryEmail, phone, position, department, bio, avatarUrl, _) = data;

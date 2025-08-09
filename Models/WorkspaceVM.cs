@@ -13,15 +13,23 @@ namespace TaskManager.Models
         // Statistiques globales
         public int TotalTasks { get; set; }
         public int CompletedTasks { get; set; }
+        public int ToDoTasks { get; set; }
         public int InProgressTasks { get; set; }
         public int OverdueTasks { get; set; }
         public int CompletedPercent { get; set; }
 
         // Activité des utilisateurs
         public List<UserActivity> UserActivities { get; set; } = new List<UserActivity>();
-        
+
         // Graphique d'activité
         public List<int> WeeklyCompletion { get; set; } = new List<int>();
+
+        public List<int> Activity { get; set; } = new List<int>();
+
+        // Listes de tâches (nouvelles)
+        public List<TaskModel> RecentTasks { get; set; } = new List<TaskModel>();
+        public List<TaskModel> UrgentTasks { get; set; } = new List<TaskModel>();
+        public UserActivity UserActivity { get; set; }
     }
 
     public class UserActivity
@@ -33,3 +41,4 @@ namespace TaskManager.Models
         public bool IsActive { get; set; }
     }
 }
+

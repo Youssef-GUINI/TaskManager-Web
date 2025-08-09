@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 namespace TaskManager.Models
 {
     // Modèle pour les messages du chat
-    public class ChatMessage
+    public class ChatBot
     {
         public int Id { get; set; }
         public string Role { get; set; } = ""; // "user" ou "assistant"

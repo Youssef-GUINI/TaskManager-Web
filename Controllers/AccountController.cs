@@ -9,6 +9,7 @@ using System;
 using MimeKit;
 using MailKit.Net.Smtp;
 
+
 namespace TaskManager.Controllers
 {
     public class AccountController : Controller
@@ -17,6 +18,7 @@ namespace TaskManager.Controllers
         private readonly SignInManager<User> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly ApplicationDbContext _context;
+        
 
         public AccountController(UserManager<User> userManager,
                                  SignInManager<User> signInManager,
@@ -36,42 +38,68 @@ namespace TaskManager.Controllers
             return View();
         }
 
-        // POST: /Account/Login
         [HttpPost]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login(LoginViewModel model, string returnUrl = null)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                if (!model.Email.EndsWith("@sqli.com", StringComparison.OrdinalIgnoreCase))
-                {
-                    ModelState.AddModelError(string.Empty, "Seuls les emails @sqli.com sont autorisés.");
-                    return View(model);
-                }
-
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (user == null)
-                {
-                    ModelState.AddModelError(string.Empty, "Utilisateur introuvable.");
-                    return View(model);
-                }
-
-                // Vérifier le mot de passe avec CheckPasswordSignInAsync
-                var result = await _signInManager.CheckPasswordSignInAsync(user, model.Password, lockoutOnFailure: false);
-
-                if (result.Succeeded)
-                {
-                    // Connexion effective
-                    await _signInManager.SignInAsync(user, isPersistent: false);
-                    return RedirectToAction("Index", "Workspace");
-                }
-
-                ModelState.AddModelError(string.Empty, "Tentative de connexion invalide.");
                 return View(model);
             }
 
+            // Vérification du domaine email
+            if (!model.Email.EndsWith("@sqli.com", StringComparison.OrdinalIgnoreCase))
+            {
+                ModelState.AddModelError(string.Empty, "Seuls les emails @sqli.com sont autorisés.");
+                return View(model);
+            }
+
+            var user = await _userManager.FindByEmailAsync(model.Email);
+            if (user == null)
+            {
+                // Ne pas révéler que l'utilisateur n'existe pas (sécurité)
+                ModelState.AddModelError(string.Empty, "Email ou mot de passe incorrect.");
+                return View(model);
+            }
+
+            // Vérification du compte verrouillé
+            if (await _userManager.IsLockedOutAsync(user))
+            {
+                ModelState.AddModelError(string.Empty, "Votre compte est temporairement verrouillé. Réessayez plus tard.");
+                return View(model);
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(
+                model.Email,
+                model.Password,
+                isPersistent: false,
+                lockoutOnFailure: true); // Active le verrouillage après plusieurs échecs
+
+            if (result.Succeeded)
+            {
+                // Réinitialiser le compteur d'échecs si succès
+                await _userManager.ResetAccessFailedCountAsync(user);
+
+
+                if (await _userManager.IsInRoleAsync(user, "Admin"))
+                {
+                    return RedirectToAction("Index", "Workspace", new { area = "Admin" });
+                }
+                else if (await _userManager.IsInRoleAsync(user, "Membre"))
+                {
+                    return RedirectToAction("Index", "Workspace", new { area = "Membre" });
+                }
+
+                // Fallback pour les utilisateurs sans rôle
+                return RedirectToAction("Index", "Home");
+            }
+            else if (result.IsLockedOut)
+            {
+                return View("AccountLocked");
+            }
+
+            ModelState.AddModelError(string.Empty, "Email ou mot de passe incorrect.");
             return View(model);
         }
-
 
 
         // GET: /Account/ForgotPassword
@@ -180,26 +208,32 @@ namespace TaskManager.Controllers
             return View();
         }
 
-        // GET: /Account/Logout
-        [HttpGet]
-        public async Task<IActionResult> Logout()
+        // // GET: /Account/Logout
+        // [HttpGet]
+        // public async Task<IActionResult> Logout()
+        // {
+        //     await _signInManager.SignOutAsync();
+        //     return RedirectToAction("Login");
+        // }
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await _signInManager.SignOutAsync();
+        return RedirectToAction("Login", "Account");
+    }
+
+        public async Task SendPasswordResetEmail(string recipientEmail, string resetLink)
         {
-            await _signInManager.SignOutAsync();
-            return RedirectToAction("Login");
-        }
+            var message = new MimeMessage();
+            message.From.Add(new MailboxAddress("Support SQLI", "bouchikhidoha2@gmail.com")); // Titre dans boîte
+            message.To.Add(MailboxAddress.Parse(recipientEmail));
+            message.Subject = "Réinitialisation de votre mot de passe";
 
+            var bodyBuilder = new BodyBuilder();
 
-public async Task SendPasswordResetEmail(string recipientEmail, string resetLink)
-{
-    var message = new MimeMessage();
-    message.From.Add(new MailboxAddress("Support SQLI", "bouchikhidoha2@gmail.com")); // Titre dans boîte
-    message.To.Add(MailboxAddress.Parse(recipientEmail));
-    message.Subject = "Réinitialisation de votre mot de passe";
-
-    var bodyBuilder = new BodyBuilder();
-
-    // Contenu HTML stylisé
-    bodyBuilder.HtmlBody = $@"
+            // Contenu HTML stylisé
+            bodyBuilder.HtmlBody = $@"
 <html>
   <body style='font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;'>
     <div style='max-width: 600px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>
@@ -215,14 +249,14 @@ public async Task SendPasswordResetEmail(string recipientEmail, string resetLink
   </body>
 </html>";
 
-    message.Body = bodyBuilder.ToMessageBody();
+            message.Body = bodyBuilder.ToMessageBody();
 
-    using var client = new SmtpClient();
-    await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
-    await client.AuthenticateAsync("bouchikhidoha2@gmail.com", "bciyztvfsgdcgppw");
-    await client.SendAsync(message);
-    await client.DisconnectAsync(true);
-}
+            using var client = new SmtpClient();
+            await client.ConnectAsync("smtp.gmail.com", 587, MailKit.Security.SecureSocketOptions.StartTls);
+            await client.AuthenticateAsync("bouchikhidoha2@gmail.com", "bciyztvfsgdcgppw");
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+        }
 
 
     }

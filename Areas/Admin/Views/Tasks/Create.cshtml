@@ -1,0 +1,183 @@
+@model TaskManager.Models.TaskModel
+@{
+    ViewData["Title"] = "Créer une Tâche";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"></h4>
+                        <i class="fas fa-plus-circle me-2"></i>
+                        ✨ Créer une Nouvelle Tâche
+                    </h4>
+                </div>
+                <div class="card-body p-4"> <!-- div 6 open -->
+<form asp-action="Create" method="post">
+    <!-- Titre -->
+    <div class="form-group">
+        <label for="Title">Titre</label>
+        <input type="text" id="Title" name="Title" class="form-control" value="@Model.Title" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <!-- Description -->
+    <div class="form-group">
+        <label for="Description">Description</label>
+        <textarea id="Description" name="Description" class="form-control">@Model.Description</textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <!-- Date d'échéance -->
+    <div class="form-group">
+        <label for="DueDate">Date d'échéance</label>
+        <input type="date" id="DueDate" name="DueDate" class="form-control" value="@(Model.DueDate.ToString("yyyy-MM-dd"))" />
+        <span asp-validation-for="DueDate" class="text-danger"></span>
+    </div>
+
+    <!-- Priorité -->
+    <div class="form-group">
+        <label for="Priority">Priorité</label>
+        <select id="Priority" name="Priority" class="form-control">
+            <option value="High" selected="@(Model.Priority == "High" ? "selected" : null)"> 🔴 Haute</option>
+            <option value="Medium" selected="@(Model.Priority == "Medium" ? "selected" : null)">🟡 Moyenne</option>
+            <option value="Low" selected="@(Model.Priority == "Low" ? "selected" : null)">🟢 Basse </option>
+        </select>
+        <span asp-validation-for="Priority" class="text-danger"></span>
+    </div>
+
+    <!-- Statut -->
+    <div class="form-group">
+        <label for="Status">Statut</label>
+        <select id="Status" name="Status" class="form-control">
+            <option value="To Do" selected="@(Model.Status == "To Do" ? "selected" : null)">📝  À faire</option>
+            <option value="In Progress" selected="@(Model.Status == "In Progress" ? "selected" : null)"> ⚡  En cours</option>
+            <option value="Completed" selected="@(Model.Status == "Completed" ? "selected" : null)">✅ Terminé</option>
+        </select>
+        <span asp-validation-for="Status" class="text-danger"></span>
+    </div>
+
+    <!-- Utilisateur assigné -->
+    <div class="form-group">
+        <label for="AssignedToUserId">Assigné à</label>
+        <select id="AssignedToUserId" name="AssignedToUserId" class="form-control">
+            <option value="">-- Sélectionner un utilisateur --</option>
+            @foreach (var user in (SelectList)ViewBag.AssignedToUsers)
+            {
+                <option value="@user.Value" selected="@(user.Value == Model.AssignedToUserId ? "selected" : null)">
+                    @user.Text
+                </option>
+            }
+        </select>
+        <span asp-validation-for="AssignedToUserId" class="text-danger"></span>
+    </div>
+                        <!-- Aperçu de la tâche -->
+                        <div class="alert alert-info" role="alert">
+                            <h6><i class="fas fa-eye me-1"></i> Aperçu :</h6>
+                            <p class="mb-1">
+                                <strong>Titre :</strong> <span id="preview-title">Titre de la tâche</span>
+                            </p>
+                            <p class="mb-1">
+                                <strong>Échéance :</strong> <span id="preview-date">--/--/----</span>
+                            </p>
+                            <p class="mb-0">
+                                <strong>Priorité :</strong> <span id="preview-priority">Moyenne</span>
+                            </p>
+                        </div>
+
+                    <!-- Boutons d'action -->
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Retour à la liste
+                            </a>
+
+                            <div>
+                                <button type="submit" class="btn btn-primary me-2">
+                                    <i class="fas fa-save me-1"></i>
+                                    💾 Créer la Tâche
+                                </button>
+                                <a href="@Url.Action("Index", "Timesheets")" class="btn btn-outline-success">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    📅 Voir dans le Calendrier
+                                </a>
+                            </div>
+                        </div>
+
+</form>
+<div class="card mt-3 border-0 bg-light">
+                <div class="card-body p-3">
+                    <h6 class="text-muted mb-2">
+                        <i class="fas fa-lightbulb me-1"></i>
+                        💡 Conseils
+                    </h6>
+                    <ul class="small text-muted mb-0">
+                        <li>✅ Un titre clair aide toute l'équipe à comprendre l'objectif</li>
+                        <li>📅 Définissez une date réaliste en tenant compte des dépendances</li>
+                        <li>👥 Assigner la tâche permet un suivi personnalisé</li>
+                        <li>🔴 Les tâches haute priorité apparaissent en rouge dans le calendrier</li>
+                    </ul>
+                </div>
+                </div>
+                </div> <!-- div 6 close -->
+</div>
+</div>
+</div>
+</div>
+
+<!-- Script pour l'aperçu en temps réel -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const titleInput = document.getElementById('Title');
+        const dueDateInput = document.getElementById('DueDate');
+        const prioritySelect = document.getElementById('Priority');
+
+        const previewTitle = document.getElementById('preview-title');
+        const previewDate = document.getElementById('preview-date');
+        const previewPriority = document.getElementById('preview-priority');
+
+        // Mise à jour en temps réel de l'aperçu
+        function updatePreview() {
+            previewTitle.textContent = titleInput.value || 'Titre de la tâche';
+
+            if (dueDateInput.value) {
+                const date = new Date(dueDateInput.value);
+                previewDate.textContent = date.toLocaleDateString('fr-FR');
+            } else {
+                previewDate.textContent = '--/--/----';
+            }
+
+            const priorityText = {
+                'Low': '🟢 Faible',
+                'Medium': '🟡 Moyenne',
+                'High': '🔴 Haute'
+            };
+            previewPriority.textContent = priorityText[prioritySelect.value] || 'Moyenne';
+        }
+
+        // Événements pour la mise à jour
+        titleInput?.addEventListener('input', updatePreview);
+        dueDateInput?.addEventListener('change', updatePreview);
+        prioritySelect?.addEventListener('change', updatePreview);
+
+        // Initialiser l'aperçu
+        updatePreview();
+
+        // Définir la date par défaut à dans 7 jours
+        if (dueDateInput && !dueDateInput.value) {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            dueDateInput.value = nextWeek.toISOString().split('T')[0];
+            updatePreview();
+        }
+    });
+</script>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("~/Views/Shared/_ValidationScriptsPartial.cshtml");
+    }
+}
+
